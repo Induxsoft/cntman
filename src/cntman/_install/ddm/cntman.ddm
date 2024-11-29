@@ -1,0 +1,42 @@
+#include "ddm.dkh"
+model "cntman"
+{
+    #include "induxsoft.abstracts.ddm"
+
+    entity "cnt_topic" : "TableModel"
+    {
+        @"id" string(32) unique required // Un identificador único para el tópico
+        @"title" string (150) required // El título del tópico
+        @"description" memo // Una descripción general del tópico
+        @"private" bool // El tema es privado
+        @"articles" bool // Si es true, se puede usar para clasificar artículos
+        @"faqs" bool // Si es true, se puede usar para clasificar preguntas frecuentes
+        @"forums" bool // Si es true se puede usar para clasificar foros
+        @"files" bool // Si es true se puede usar para clasificar archivos
+        @"links" bool // Si es true se puede usar para clasificar enlaces
+        @"training" bool //Si es true se puede usar para clasificar cursos y tutoriales
+        @"anything" bool // Si es true puede usarse para clasificar lo que sea
+        
+        @"parent" ref:"cnt_topic" //Referencia a sí mismo (para construir un árbol)
+    }
+
+    entity "cnt_tag" : "TableModel"
+    {
+        @"tagname" string(32) unique required
+        @"description" memo 
+    }
+
+    entity "cnt_faq" : "TableModel"
+    {
+        @"topic" ref: "cnt_topic" required
+        @"title" string(150) required
+        @"author" string(32) required
+        @"detail" memo
+        @"answer" memo
+        @"tag1" string(32) required
+        @"tag2" string(32)
+        @"tag3" string(32)
+        @"tag4" string(32)
+        @"tag5" string(32)
+    }
+}

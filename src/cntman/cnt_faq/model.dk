@@ -1,0 +1,182 @@
+#include "dkli.dkh"
+#!
+module "Preguntas más frecuentes:faq"
+{
+    @table_name = "" // params._entities_type
+    @keyfield = "sys_pk" // params._key
+    // @create_fields = "*"
+    // @update_fields = "*"
+    // @create_exclude_fields = ""
+    @update_exclude_fields = "sys_pk,sys_guid,sys_dtcreated,sys_user"
+    // @create_alias_fields = ""
+    // @update_alias_fields = ""
+
+    @list_query = "SELECT * FROM #<@table_name> WHERE NOT IFNULL(sys_deleted,0) LIMIT #<@default_max_rows>"
+    @read_query = "SELECT * FROM #<@table_name> WHERE #<@keyfield> = @_entity_id LIMIT 1"
+
+    function setPrintTitles(&db,&data)
+    {
+        using data
+        {
+            member @"titles"
+            {
+                @"title": dbr.vars.getd(db,"FXCA108","")
+                @"subtitle": dbr.vars.getd(db,"FXCA109","")
+                @"subtitle_2": dbr.vars.getd(db,"FXCA110","")
+                @"footer": dbr.vars.getd(db,"FXCA111","")
+            }
+        }
+    }
+
+    function prepareView(&db,&params,&data)
+    {
+        //#region prepareView()
+        if not(field.exist(params,"decimals")){ params<"decimals"> : parse.num(dbr.vars.get(db,"FXCA001")) }
+        is_new = (@@(params,"$_entity_id") == "_new")
+
+        // code...
+
+        do setPrintTitles(db,data)
+    }
+
+    function list(&db,&params)
+    {
+        //#region list()
+        do dbr.apps.action.grant("TE30")
+        if not(field.exist(params,"decimals")){ params<"decimals"> : parse.num(dbr.vars.get(db,"FXCA001")) }
+        
+        new data
+        {
+            @"data*": entity.list(db,params)
+            @"itemactions*": dbr.apps.itemactions(db,"DET0A3","action","",0)
+            @"itemreports*": dbr.apps.itemactions(db,"DET0A3","report","",0)
+        }
+        do setPrintTitles(db,data)
+        return data
+
+        exception{ do catch(db,params,@null) }
+    }
+
+    function read(&db,&params)
+    {
+        //#region read()
+        do dbr.apps.action.grant("TE30")
+        if not(field.exist(params,"decimals")){ params<"decimals"> : parse.num(dbr.vars.get(db,"FXCA001")) }
+
+        if not(isset("@just_read_entity")) { @just_read_entity = @false }
+        if @just_read_entity { return entity.read(db,params) }
+
+        new data { @"entity*": entity.read(db,params) }
+        do prepareView(db,params,data)
+        return data
+
+        exception{ do catch(db,params,@null) }
+    }
+
+    function blank(&db,&params)
+    {
+        //#region blank()
+        do dbr.apps.action.grant("TE30")
+        if not(field.exist(params,"decimals")){ params<"decimals"> : parse.num(dbr.vars.get(db,"FXCA001")) }
+        
+        new data {}
+        do prepareView(db,params,data)
+        return data
+        
+        exception{ do catch(db,params,@null) }
+    }
+
+    function create(&db,&params,&data)
+    {
+        //#region create()
+        @use_transaction = @false
+        @just_read_entity = @true
+        
+        do dbr.apps.action.pre("TE31")
+        do dbr.begin(db)
+
+        ref entity = entity.create(db,params,data)
+
+        do dbr.apps.action.pos(entity)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(entity)
+
+        return entity
+
+        exception{ do catch(db,params,data) }
+    }
+
+    function update(&db,&params,&data)
+    {
+        //#region update()
+        @use_transaction = @false
+        @just_read_entity = @true
+        
+        do dbr.apps.action.pre("TE32")
+        do dbr.begin(db)
+
+        ref entity = entity.update(db,params,data)
+
+        do dbr.apps.action.pos(entity)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(entity)
+
+        return entity
+
+        exception{ do catch(db,params,data) }
+    }
+
+    function delete(&db,&params)
+    {
+        //#region delete()
+        @use_transaction = @false
+        
+        do dbr.apps.action.pre("TE33")
+        do dbr.begin(db)
+
+        ref entity = entity.delete(db,params)
+
+        do dbr.apps.action.pos(entity)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(entity)
+
+        return entity
+
+        exception{ do catch(db,params,@null) }
+    }
+
+    catch::&db,&params,&data
+    {
+        //#region catch
+        code = last_error_code()
+        error = last_error()
+
+        if dbr.in_transaction(db) { do dbr.rollback(db) }
+        if isset("@@_action_context") { do dbr.apps.action.log() }
+
+        if isanyword(@@(params,"$_operation"),"create,update")
+        {
+            if isnull(data) { ref data:record.create() }
+            if contains_all_words(error,"Save Error,Duplicate entry") { error = "Entrada duplicada, ya existe un registro con los mismos valores." }
+
+            ref FormData = record.copy(data,"*")
+            do record.clear(data)
+            data<"form*"> : FormData
+            
+            do prepareView(db,params,data)
+        }
+        if contains_all_words(error,"DELETE Error,CONSTRAINT,FOREIGN KEY,REFERENCES") {
+            error = "No es posible eliminar el registro, otros registros son dependientes del elemento seleccionado."
+        }
+        
+        do clear_exceptions()
+        do rise_error(code,error)
+    }
+
+    point @list to faq.list
+    point @read to faq.read
+    point @blank to faq.blank
+    point @create to faq.create
+    point @update to faq.update
+    point @delete to faq.delete
+}

@@ -1,0 +1,50 @@
+#include "dkli.dkh"
+#!
+module "Funciones de propósito general"
+{
+	if not(isset("@http_context")) && isset("@crud_context") { ref @http_context = ifnull(@@(@crud_context,"&http"),record.create()) }
+	
+	function contains_all_words(sentence,keywords)
+    {
+        ref list = split(trim(keywords),",")
+        success = @false
+        for i = 0; i < list.count(list)
+        {
+            word = trim(list.str(list,i))
+            if word != "" {
+                if not(contains(sentence,word)) { return @false }
+                success = @true
+            }
+        }
+        return success
+    }
+
+	function fd(name,type,&obj)
+    {
+        if isnull(obj) { ref obj:record.create() }
+        name = trim(str(name))
+        type = trim(str(type))
+        
+        if isanyword(type,"nm,num,number")
+        {
+            value = @("#./form/"+name)
+            if value == 0 { value = @("#input/"+name) }
+            if value == 0 { value = @@(obj,"#"+name) }
+            return value
+        }
+        else if isanyword(type,"rd,rdb,ch,chk")
+        {
+            bool = trim(@("$./form/"+name))
+            if bool == "" { bool = trim(@("$input/"+name)) }
+            if bool == "" { bool = trim(@@(obj,"$"+name)) }
+            return ifstr(parse.bool(bool),"checked","")
+        }
+        else
+        {
+            value = trim(@("$./form/"+name))
+            if value == "" { value = trim(@("$input/"+name)) }
+            if value == "" { value = trim(@@(obj,"$"+name)) }
+            return value
+        }
+    }
+}

@@ -1,0 +1,151 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+    #include "../_lib/config.dk"
+    #include "../_lib/lib.dk"
+	#include "../_lib/icons.dk"
+
+    do @context.begin(@crud_context)
+
+    ref entity = ifnull(@("&./entity"),record.create())
+    ref parent = ifnull(@("&./parent"),record.create())
+    ref titles = ifnull(@("&./titles"),record.create())
+
+	@_entities_type = @("$parameters/_entities_type")
+	@_entity_id = @("$parameters/_entity_id")
+	@is_new = (@_entity_id == "_new")
+
+    form_id = "frm_"+@_entities_type
+    // decimals = @("#parameters/decimals")
+    // num_step = "0."+padright("",(decimals-1),"0")+"1"
+    // num_max = "9999999999."+padright("",decimals,"9")
+    // num_min = num_step
+
+    function print_buttons()
+    {
+        btn_cls = "btn btn-sm border-secondary induxsoft-corners btn-main-action"
+        #$
+        button(class="#<btn_cls>" type="button" id="btn-submit" title="Guardar"){$"#<@ICON_SAVE>"}
+        #!
+    }
+    point @buttons to print_buttons
+    new nav_config
+    {
+        @"title": ifstr(@is_new, "Agregar", "Editar") +" "+ "tema"
+        @"urlexit": "../"
+        // @"print_mode": 0 // 0-window.print() | 1-v12PrintHTML()
+        @"buttons*": @buttons
+        member @"hidden"
+        {
+            @"print": @true
+        }
+    }
+    // Encapsula a la vista en su totalidad, todo lo que hay antes o después no se considera 
+    #$
+    div(class="container-lg" id="view")
+    {
+        // Filtros y acciones
+        section(id="top_area")
+        {
+            #!
+            do uie.printV12FormBar(nav_config)
+            #$
+        }
+        // Contenido principal
+        section(id="work_area" style="overflow-y:auto; overflow-x:hidden;")
+        {
+            form(method="POST" action="./" id="#<form_id>")
+            {
+                input(type="hidden" name="sys_pk" value="#<@@(entity,'#sys_pk')>")
+                input(type="hidden" name="sys_recver" value="#<@@(entity,'#sys_recver')>")
+                #!
+                do uie.print_from_url_field()
+                #$
+
+                div(class="row")
+                {
+                    div(class="col-sm-4") {
+                        label(class="form-label" "for"="id"){$"ID:"}
+                        input(class="form-control rounded-0" type="text" name="id" value="#<fd('id','tx',entity)>" maxlength="32" id="id" required="" spellcheck="false")
+                    }
+                    div(class="col-sm-8") {
+                        label(class="form-label" "for"="title"){$"Título:"}
+                        input(class="form-control rounded-0" type="text" name="title" value="#<fd('title','tx',entity)>" maxlength="150" id="title" required="")
+                    }
+                    div(class="col-12") {
+                        label(class="form-label" "for"="description"){$"Descripción"}
+                        textarea(class="form-control rounded-0" name="description" id="description" rows="5" spellcheck="true"){$"#<fd('description','tx',entity)>"}
+                    }
+                    div(class="col-12") {
+                        label(class="form-label" "for"="ik_parent"){$"Padre:"}
+                        "input-key"(name="parent" id="ik_parent" "data-key"="sys_pk" "data-search"="id" "data-text"="title" "data-source"="#<@URL_SEARCH_TOPIC>" "data-value"="#<to.json(parent)>" columns="id,title,private" colcaptions="ID,Título,Privado"){$""}
+                    }
+                    div(class="col-12")
+                    {
+                        div(class="form-check mt-2") {
+                            input(class="form-check-input" type="checkbox" name="private" id="private" "#<fd('private','ch',entity)>"="")
+                            label(class="form-check-label" "for"="private"){$"Privado"}
+                        }
+
+                        div(class="my-2 p-2 border")
+                        {
+                            div(class="form-check") {
+                                input(class="form-check-input" type="checkbox" name="articles" id="articles" "#<fd('articles','ch',entity)>"="")
+                                label(class="form-check-label" "for"="articles"){$"Puede usarse para clasificar artículos"}
+                            }
+                            div(class="form-check") {
+                                input(class="form-check-input" type="checkbox" name="faqs" id="faqs" "#<fd('faqs','ch',entity)>"="")
+                                label(class="form-check-label" "for"="faqs"){$"Puede usarse para clasificar preguntas frecuentes"}
+                            }
+                            div(class="form-check") {
+                                input(class="form-check-input" type="checkbox" name="forums" id="forums" "#<fd('forums','ch',entity)>"="")
+                                label(class="form-check-label" "for"="forums"){$"Puede usarse para clasificar foros"}
+                            }
+                            div(class="form-check") {
+                                input(class="form-check-input" type="checkbox" name="files" id="files" "#<fd('files','ch',entity)>"="")
+                                label(class="form-check-label" "for"="files"){$"Puede usarse para clasificar archivos"}
+                            }
+                            div(class="form-check") {
+                                input(class="form-check-input" type="checkbox" name="links" id="links" "#<fd('links','ch',entity)>"="")
+                                label(class="form-check-label" "for"="links"){$"Puede usarse para clasificar enlaces"}
+                            }
+                            div(class="form-check") {
+                                input(class="form-check-input" type="checkbox" name="training" id="training" "#<fd('training','ch',entity)>"="")
+                                label(class="form-check-label" "for"="training"){$"Puede usarse para clasificar cursos y tutoriales"}
+                            }
+                            div(class="form-check") {
+                                input(class="form-check-input" type="checkbox" name="anything" id="anything" "#<fd('anything','ch',entity)>"="")
+                                label(class="form-check-label" "for"="anything"){$"Puede usarse para clasificar lo que sea"}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Resúmenes y datos al pie
+        section(id="bottom_area")
+        {
+            //////////////////////////////////////////////////////////////////
+            div(id="_custom_area")
+            {
+                // script(src=""){$""}
+                script(type="text/javascript")
+                {$'
+                    document.addEventListener("DOMContentLoaded", () => {
+                        const btn_submit = document.getElementById("btn-submit");
+                        btn_submit.addEventListener("click", () => InduxsoftCrudlModel.Submit("#<form_id>"));
+                        // Script injection
+                        #<@@(@crud_context,"script")>
+                    });
+                '}
+            }
+        }
+    }
+    #!
+    
+    do @context.end()
+}

@@ -1,0 +1,17 @@
+﻿itemid,description,itemparent
+cntman,Administración de contenido público,\0
+cntman.topic,Temas de contenido,cntman
+TE10,Temas de contenido,cntman.topic
+TE11,Crear tema de contenido,cntman.topic
+TE12,Editar tema de contenido,cntman.topic
+TE13,Eliminar tema de contenido,cntman.topic
+cntman.tag,Etiquetas de contenido,cntman
+TE20,Etiquetas de contenido,cntman.tag
+TE21,Crear etiqueta de contenido,cntman.tag
+TE22,Editar etiqueta de contenido,cntman.tag
+TE23,Eliminar etiqueta de contenido,cntman.tag
+cntman.faq,Preguntas más frecuentes,cntman
+TE30,Preguntas más frecuentes,cntman.faq
+TE31,Nueva FAQ,cntman.faq
+TE32,Editar FAQ,cntman.faq
+TE33,Eliminar FAQ,cntman.faq

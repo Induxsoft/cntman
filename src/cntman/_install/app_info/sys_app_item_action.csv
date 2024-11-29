@@ -1,0 +1,13 @@
+"id","title","shorttitle","icon16x16","href","_blank","appid","itemtype","req_context_item_id","act_type"
+TE10,Temas de contenido,Temas,,/!/cntman/topic/,0,cntman.topic,DET0A1,0,shortcut
+TE11,Crear tema de contenido,Crear,,/!/cntman/topic/_new/?parent=@_src_context_item_id,0,cntman.topic,DET0A1,0,action
+TE12,Editar tema de contenido,Editar,,/!/cntman/topic/@_src_context_item_id/,0,cntman.topic,DET0A1,1,action
+TE13,Eliminar tema de contenido,Eliminar,,javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);,0,cntman.topic,DET0A1,1,action
+TE20,Etiquetas de contenido,Etiquetas,,/!/cntman/tag/,0,cntman.tag,DET0A2,0,shortcut
+TE21,Crear etiqueta de contenido,Crear,,/!/cntman/tag/_new/,0,cntman.tag,DET0A2,0,action
+TE22,Editar etiqueta de contenido,Editar,,/!/cntman/tag/@_src_context_item_id/,0,cntman.tag,DET0A2,1,action
+TE23,Eliminar etiqueta de contenido,Eliminar,,javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);,0,cntman.tag,DET0A2,1,action
+TE30,Preguntas más frecuentes,FAQ,,/!/cntman/faq/,0,cntman.faq,DET0A3,0,shortcut
+TE31,Nueva FAQ,Nuevo,,/!/cntman/faq/_new/,0,cntman.faq,DET0A3,0,action
+TE32,Editar FAQ,Editar,,/!/cntman/faq/@_src_context_item_id/,0,cntman.faq,DET0A3,1,action
+TE33,Eliminar FAQ,Eliminar,,javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);,0,cntman.faq,DET0A3,1,action
