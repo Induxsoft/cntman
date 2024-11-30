@@ -17,7 +17,7 @@ module "list.dk"
 
     new table_definition
     {
-        @"datatable*": data
+        @"datatable*":data
         member @"columns"
         {
             member @"id"
@@ -33,7 +33,14 @@ module "list.dk"
                 @"align":"center"
             }
         }
-        @"table_footer": "Mostrando los primeros # registros"
+        @"show-tree":@false
+        member @"tree-opt"
+        {
+            @"key":"sys_pk"
+            @"parentkey":"parent"
+            @"expanded":@true
+        }
+        @"table_footer":"Mostrando los primeros # registros"
     }
 
     // function print_buttons()

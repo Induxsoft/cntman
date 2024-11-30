@@ -14,7 +14,6 @@ module "Temas de contenido:topic"
     @list_query = "
     SELECT
         a.sys_pk,
-        a.sys_recver,
         a.parent,
         IFNULL(b.title,'') padre,
         a.id,
@@ -55,10 +54,11 @@ module "Temas de contenido:topic"
 
         parent = @@(params,"#parent")
         if field.exist(data,"form") { parent = @@(data,"#form/parent") }
-        if field.exist(data,"entity"){ parent = @@(data,"#entity/parent") }
+        else if field.exist(data,"entity") { parent = @@(data,"#entity/parent") }
 
         if parent > 0 {
             sql = "select sys_pk,id,title,if(private,'Sí','No') private from #<@table_name> where #<@keyfield> = @parent"
+            params<"parent"> : parent
             data<"parent*"> : dbr.rec(db,ftext(sql),params)
         }
 

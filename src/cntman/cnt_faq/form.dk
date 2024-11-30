@@ -12,6 +12,7 @@ module "form.dk"
     do @context.begin(@crud_context)
 
     ref entity = ifnull(@("&./entity"),record.create())
+    ref topic = ifnull(@("&./topic"),record.create())
     ref titles = ifnull(@("&./titles"),record.create())
 
 	@_entities_type = @("$parameters/_entities_type")
@@ -34,7 +35,7 @@ module "form.dk"
     point @buttons to print_buttons
     new nav_config
     {
-        @"title": ifstr(@is_new, "Agregar", "Editar") +" "+ @_entities_type
+        @"title": ifstr(@is_new, "Nueva", "Editar") +" "+ "pregunta"
         @"urlexit": "../"
         // @"print_mode": 0 // 0-window.print() | 1-v12PrintHTML()
         @"buttons*": @buttons
@@ -65,8 +66,41 @@ module "form.dk"
                 do uie.print_from_url_field()
                 #$
 
-                label(class="form-label" "for"="sys_info"){$"Sys Info"}
-                input(class="form-control rounded-0" type="text" name="sys_info" value="#<@@(entity,'$sys_info')>" maxlength="32" id="sys_info")
+                div(class="row")
+                {
+                    div(class="col-12") {
+                        label(class="form-label fw-bolder" "for"="ik_topic"){$"Tema:"}
+                        "input-key"(name="topic" id="ik_topic" "data-key"="sys_pk" "data-search"="id" "data-text"="title" "data-source"="#<@URL_SEARCH_TOPIC>" "data-value"="#<to.json(topic)>" columns="id,title,private" colcaptions="ID,Título,Privado" required="true"){$""}
+                    }
+                    div(class="col-12") {
+                        label(class="form-label" "for"="title"){$"Título:"}
+                        input(class="form-control rounded-0" type="text" name="title" value="#<fd('title','tx',entity)>" maxlength="150" id="title" required="" spellcheck="true")
+                    }
+                    div(class="col-12") {
+                        label(class="form-label" "for"="detail"){$"Detalle:"}
+                        textarea(class="form-control rounded-0" name="detail" id="detail" rows="5" spellcheck="true"){$"#<fd('detail','tx',entity)>"}
+                    }
+                    div(class="col-auto") {
+                        label(class="form-label fw-bolder" "for"="tag1"){$"Etiqueta:"}
+                        input(class="form-control rounded-0" type="text" name="tag1" value="#<fd('tag1','tx',entity)>" maxlength="32" size="32" id="tag1" required="" spellcheck="false")
+                    }
+                    div(class="col-auto") {
+                        label(class="form-label" "for"="tag2"){$"Etiqueta 2:"}
+                        input(class="form-control rounded-0" type="text" name="tag2" value="#<fd('tag2','tx',entity)>" maxlength="32" size="32" id="tag2" spellcheck="false")
+                    }
+                    div(class="col-auto") {
+                        label(class="form-label" "for"="tag3"){$"Etiqueta 3:"}
+                        input(class="form-control rounded-0" type="text" name="tag3" value="#<fd('tag3','tx',entity)>" maxlength="32" size="32" id="tag3" spellcheck="false")
+                    }
+                    div(class="col-auto") {
+                        label(class="form-label" "for"="tag4"){$"Etiqueta 4:"}
+                        input(class="form-control rounded-0" type="text" name="tag4" value="#<fd('tag4','tx',entity)>" maxlength="32" size="32" id="tag4" spellcheck="false")
+                    }
+                    div(class="col-auto") {
+                        label(class="form-label" "for"="tag5"){$"Etiqueta 5:"}
+                        input(class="form-control rounded-0" type="text" name="tag5" value="#<fd('tag5','tx',entity)>" maxlength="32" size="32" id="tag5" spellcheck="false")
+                    }
+                }
             }
         }
         // Resúmenes y datos al pie

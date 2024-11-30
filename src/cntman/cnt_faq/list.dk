@@ -15,17 +15,38 @@ module "list.dk"
 	table_id = "tbl_"+@_entities_type
     decimals = @("#parameters/decimals")
 
+    new fil_topics
+    {
+        @"datatable*": ifnull(@("&./list_topics"),list.create())
+        @"id": "fil_topics"
+        member "attributes"
+        {
+            @"class": "induxsoft-form-select"
+            @"name": "fil_topic"
+            @"title": "Filtrar por temas"
+            @"onchange": "document.querySelector('#form-filter').submit();"
+        }
+        @"value_field": "sys_pk"
+        @"text_field": "title"
+        @"first_value": "*"
+        @"first_text": "(Todos los temas)"
+        @"selected": @("parameters/fil_topic")
+    }
+
     new table_definition
     {
         @"datatable*": data
         member @"columns"
         {
+            member @"tema" { @"caption":"Tema" }
             member @"title" { @"caption":"Título" }
-            member @"detail" { @"caption":"Detalle" }
+            member @"tags" { @"caption":"Etiquetas" }
             member @"answer" { @"caption":"Respuesta" }
         }
         @"table_footer": "Mostrando los primeros # registros"
     }
+
+    if @("#parameters/fil_topic") > 0 { do field.remove(table_definition,"columns/tema") }
 
     // function print_buttons()
     // {
@@ -59,15 +80,25 @@ module "list.dk"
 
             form(class="mb-1" action="./" method="GET" id="form-filter")
             {
-                "filter-text"(
-                    "id"="fil_text"
-                    "text-field"="fil_text"
-                    "placeholder"="Buscar ..."
-                    "form"="#form-filter"
-                    "value"="#<@('$parameters/fil_text')>"
-                    "auto-submit"="true"
-                    "class"="w-100"
-                ){$""}
+                div(class="d-flex align-items-center gap-2 flex-wrap w-100 py-1")
+                {
+                    div(class="d-flex gap-2")
+                    {
+                        div{ #! do uie.dbSelect(fil_topics) } #$
+                    }
+                    div(class="flex-grow-1")
+                    {
+                        "filter-text"(
+                            "id"="fil_text"
+                            "text-field"="fil_text"
+                            "placeholder"="Buscar ..."
+                            "form"="#form-filter"
+                            "value"="#<@('$parameters/fil_text')>"
+                            "auto-submit"="true"
+                            "class"="w-100"
+                        ){$""}
+                    }
+                }
             }
         }
         // Contenido principal

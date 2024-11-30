@@ -2,7 +2,7 @@
 #!
 module "Preguntas más frecuentes:faq"
 {
-    @table_name = "" // params._entities_type
+    @table_name = "cnt_faq" // params._entities_type
     @keyfield = "sys_pk" // params._key
     // @create_fields = "*"
     // @update_fields = "*"
@@ -11,7 +11,21 @@ module "Preguntas más frecuentes:faq"
     // @create_alias_fields = ""
     // @update_alias_fields = ""
 
-    @list_query = "SELECT * FROM #<@table_name> WHERE NOT IFNULL(sys_deleted,0) LIMIT #<@default_max_rows>"
+    @list_query = "
+    SELECT
+        q.sys_pk,
+        t.title AS tema,
+        q.title,
+        IFNULL(q.detail,'') detail,
+        IFNULL(q.answer,'') answer,
+        CONCAT_WS('; ', q.tag1,q.tag2,q.tag3,q.tag4,q.tag5) tags
+    FROM #<@table_name> q
+        INNER JOIN cnt_topic t ON t.sys_pk = q.topic
+    WHERE NOT IFNULL(q.sys_deleted,0)
+        AND IF(IFNULL(@fil_topic,'*')='*', TRUE, q.topic = @fil_topic)
+        AND IF(IFNULL(@fil_text,'')='', TRUE, (q.title LIKE CONCAT('%',@fil_text,'%') OR CONCAT_WS(';', q.tag1,q.tag2,q.tag3,q.tag4,q.tag5) LIKE CONCAT('%',@fil_text,'%')))
+    LIMIT #<@default_max_rows>
+    "
     @read_query = "SELECT * FROM #<@table_name> WHERE #<@keyfield> = @_entity_id LIMIT 1"
 
     function setPrintTitles(&db,&data)
@@ -34,7 +48,15 @@ module "Preguntas más frecuentes:faq"
         if not(field.exist(params,"decimals")){ params<"decimals"> : parse.num(dbr.vars.get(db,"FXCA001")) }
         is_new = (@@(params,"$_entity_id") == "_new")
 
-        // code...
+        topic = @@(params,"#topic")
+        if field.exist(data,"form") { topic = @@(data,"#form/topic") }
+        else if field.exist(data,"entity") { topic = @@(data,"#entity/topic") }
+
+        if topic > 0 {
+            sql = "select sys_pk,id,title,if(private,'Sí','No') private from cnt_topic where sys_pk = @topic"
+            params<"topic"> : topic
+            data<"topic*"> : dbr.rec(db,sql,params)
+        }
 
         do setPrintTitles(db,data)
     }
@@ -50,6 +72,7 @@ module "Preguntas más frecuentes:faq"
             @"data*": entity.list(db,params)
             @"itemactions*": dbr.apps.itemactions(db,"DET0A3","action","",0)
             @"itemreports*": dbr.apps.itemactions(db,"DET0A3","report","",0)
+            @"list_topics*": dbr.list(db,"select sys_pk, title from cnt_topic where not ifnull(sys_deleted,0)",@null)
         }
         do setPrintTitles(db,data)
         return data
@@ -95,6 +118,12 @@ module "Preguntas más frecuentes:faq"
         do dbr.apps.action.pre("TE31")
         do dbr.begin(db)
 
+        do validFields(data)
+        using data
+        {
+            @"sys_user": @@(@http_context, "$session/user/uid")
+            @"author": cut(@@(@http_context, "$session/user/name"),32)
+        }
         ref entity = entity.create(db,params,data)
 
         do dbr.apps.action.pos(entity)
@@ -115,6 +144,8 @@ module "Preguntas más frecuentes:faq"
         do dbr.apps.action.pre("TE32")
         do dbr.begin(db)
 
+        do validFields(data)
+        data<"sys_lastuser"> : @@(@http_context, "$session/user/uid")
         ref entity = entity.update(db,params,data)
 
         do dbr.apps.action.pos(entity)
@@ -145,6 +176,13 @@ module "Preguntas más frecuentes:faq"
         exception{ do catch(db,params,@null) }
     }
 
+    function validFields(&data)
+    {
+        if @@(data,"#topic") < 1 { do rise_error(511,"El valor de `Tema` es requerido.") }
+        if trim(@@(data,"$title")) == "" { do rise_error(512,"El valor de `Título` es requerido.") }
+        if trim(@@(data,"$tag1")) == "" { do rise_error(513,"Es necesario indicar al menos una etiqueta.") }
+    }
+
     catch::&db,&params,&data
     {
         //#region catch
@@ -157,16 +195,12 @@ module "Preguntas más frecuentes:faq"
         if isanyword(@@(params,"$_operation"),"create,update")
         {
             if isnull(data) { ref data:record.create() }
-            if contains_all_words(error,"Save Error,Duplicate entry") { error = "Entrada duplicada, ya existe un registro con los mismos valores." }
 
             ref FormData = record.copy(data,"*")
             do record.clear(data)
             data<"form*"> : FormData
             
             do prepareView(db,params,data)
-        }
-        if contains_all_words(error,"DELETE Error,CONSTRAINT,FOREIGN KEY,REFERENCES") {
-            error = "No es posible eliminar el registro, otros registros son dependientes del elemento seleccionado."
         }
         
         do clear_exceptions()

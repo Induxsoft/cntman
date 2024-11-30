@@ -3,7 +3,7 @@
 module "Variables globales"
 {
 	if not(isset("@http_context")) && isset("@crud_context") { ref @http_context = ifnull(@@(@crud_context,"&http"),record.create()) }
-	do errordet(@true) //Mostrar detalles del error: @true -> {code} description [Ln 000] | @false -> description
+	do errordet(@false) //Mostrar detalles del error: @true -> {code} description [Ln 000] | @false -> description
 	
 	@default_max_rows = 250
 
