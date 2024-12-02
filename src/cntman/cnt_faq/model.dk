@@ -18,7 +18,7 @@ module "Preguntas más frecuentes:faq"
         q.title,
         IFNULL(q.detail,'') detail,
         IFNULL(q.answer,'') answer,
-        CONCAT_WS('; ', q.tag1,q.tag2,q.tag3,q.tag4,q.tag5) tags
+        REPLACE(CONCAT_WS('; ', q.tag1,q.tag2,q.tag3,q.tag4,q.tag5),' ;','') tags
     FROM #<@table_name> q
         INNER JOIN cnt_topic t ON t.sys_pk = q.topic
     WHERE NOT IFNULL(q.sys_deleted,0)

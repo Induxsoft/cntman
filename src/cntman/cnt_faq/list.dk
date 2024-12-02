@@ -48,21 +48,21 @@ module "list.dk"
 
     if @("#parameters/fil_topic") > 0 { do field.remove(table_definition,"columns/tema") }
 
-    // function print_buttons()
-    // {
-    //     btn_cls = "btn btn-sm border-secondary induxsoft-corners btn-main-action"
-    //     #$
-    //     a(class="#<btn_cls>" href="./_new/"){$"Agregar"}
-    //     #!
-    // }
-    // point @buttons to print_buttons
+    function print_buttons()
+    {
+        btn_cls = "btn btn-sm border-secondary induxsoft-corners btn-main-action"
+        #$
+        a(class="#<btn_cls>" href="./_new/?topic=#<@('#parameters/fil_topic')>"){$"Nuevo"}
+        #!
+    }
+    point @buttons to print_buttons
     new nav_config
     {
         @"title": "FAQ"
         @"urlexit": "/"
         @"print_mode": 0 // 0-window.print() | 1-v12PrintHTML()
-        // @"buttons*": @buttons
-        // @"main": "" // Acciones que seran visibles en la navbar.
+        @"buttons*": @buttons
+        @"main": "TE32,TE33" // Acciones que seran visibles en la navbar.
         @"actions*": ifnull(@("&./itemactions"),list.create())
         @"reports*": ifnull(@("&./itemreports"),list.create())
         @"jscurrentcontext": "getCurrentContext"

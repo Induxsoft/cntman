@@ -20,10 +20,19 @@ module "form.dk"
 	@is_new = (@_entity_id == "_new")
 
     form_id = "frm_"+@_entities_type
-    // decimals = @("#parameters/decimals")
-    // num_step = "0."+padright("",(decimals-1),"0")+"1"
-    // num_max = "9999999999."+padright("",decimals,"9")
-    // num_min = num_step
+    
+    tag2 = fd('tag2','tx',entity)
+    tag3 = fd('tag3','tx',entity)
+    tag4 = fd('tag4','tx',entity)
+    tag5 = fd('tag5','tx',entity)
+    chk_tag2 = ifstr(tag2!='', 'checked', '')
+    chk_tag3 = ifstr(tag3!='', 'checked', '')
+    chk_tag4 = ifstr(tag4!='', 'checked', '')
+    chk_tag5 = ifstr(tag5!='', 'checked', '')
+    dis_tag2 = ifstr(tag2=='', 'disabled', '')
+    dis_tag3 = ifstr(tag3=='', 'disabled', '')
+    dis_tag4 = ifstr(tag4=='', 'disabled', '')
+    dis_tag5 = ifstr(tag5=='', 'disabled', '')
 
     function print_buttons()
     {
@@ -37,7 +46,6 @@ module "form.dk"
     {
         @"title": ifstr(@is_new, "Nueva", "Editar") +" "+ "pregunta"
         @"urlexit": "../"
-        // @"print_mode": 0 // 0-window.print() | 1-v12PrintHTML()
         @"buttons*": @buttons
         member @"hidden"
         {
@@ -80,25 +88,45 @@ module "form.dk"
                         label(class="form-label" "for"="detail"){$"Detalle:"}
                         textarea(class="form-control rounded-0" name="detail" id="detail" rows="5" spellcheck="true"){$"#<fd('detail','tx',entity)>"}
                     }
+                    div(class="col-12") {
+                        label(class="form-label" "for"="answer"){$"Respuesta:"}
+                        textarea(class="form-control rounded-0" name="answer" id="answer" rows="5" spellcheck="true"){$"#<fd('answer','tx',entity)>"}
+                    }
                     div(class="col-auto") {
                         label(class="form-label fw-bolder" "for"="tag1"){$"Etiqueta:"}
                         input(class="form-control rounded-0" type="text" name="tag1" value="#<fd('tag1','tx',entity)>" maxlength="32" size="32" id="tag1" required="" spellcheck="false")
                     }
                     div(class="col-auto") {
-                        label(class="form-label" "for"="tag2"){$"Etiqueta 2:"}
-                        input(class="form-control rounded-0" type="text" name="tag2" value="#<fd('tag2','tx',entity)>" maxlength="32" size="32" id="tag2" spellcheck="false")
+                        div(class="form-check mb-2") {
+                            input(class="form-check-input" type="checkbox" id="chk_tag2" onchange="toggleEdit('tag2',this.checked);" "#<chk_tag2>"="")
+                            label(class="form-check-label" "for"="chk_tag2"){$"Etiqueta 2"}
+                        }
+                        // label(class="form-label" "for"="tag2"){$"Etiqueta 2:"}
+                        input(class="form-control rounded-0" type="text" name="tag2" value="#<tag2>" maxlength="32" size="32" id="tag2" "#<dis_tag2>"="" spellcheck="false")
                     }
                     div(class="col-auto") {
-                        label(class="form-label" "for"="tag3"){$"Etiqueta 3:"}
-                        input(class="form-control rounded-0" type="text" name="tag3" value="#<fd('tag3','tx',entity)>" maxlength="32" size="32" id="tag3" spellcheck="false")
+                        div(class="form-check mb-2") {
+                            input(class="form-check-input" type="checkbox" id="chk_tag3" onchange="toggleEdit('tag3',this.checked);" "#<chk_tag3>"="")
+                            label(class="form-check-label" "for"="chk_tag3"){$"Etiqueta 3"}
+                        }
+                        // label(class="form-label" "for"="tag3"){$"Etiqueta 3:"}
+                        input(class="form-control rounded-0" type="text" name="tag3" value="#<tag3>" maxlength="32" size="32" id="tag3" "#<dis_tag3>"="" spellcheck="false")
                     }
                     div(class="col-auto") {
-                        label(class="form-label" "for"="tag4"){$"Etiqueta 4:"}
-                        input(class="form-control rounded-0" type="text" name="tag4" value="#<fd('tag4','tx',entity)>" maxlength="32" size="32" id="tag4" spellcheck="false")
+                        div(class="form-check mb-2") {
+                            input(class="form-check-input" type="checkbox" id="chk_tag4" onchange="toggleEdit('tag4',this.checked);" "#<chk_tag4>"="")
+                            label(class="form-check-label" "for"="chk_tag4"){$"Etiqueta 4"}
+                        }
+                        // label(class="form-label" "for"="tag4"){$"Etiqueta 4:"}
+                        input(class="form-control rounded-0" type="text" name="tag4" value="#<tag4>" maxlength="32" size="32" id="tag4" "#<dis_tag4>"="" spellcheck="false")
                     }
                     div(class="col-auto") {
-                        label(class="form-label" "for"="tag5"){$"Etiqueta 5:"}
-                        input(class="form-control rounded-0" type="text" name="tag5" value="#<fd('tag5','tx',entity)>" maxlength="32" size="32" id="tag5" spellcheck="false")
+                        div(class="form-check mb-2") {
+                            input(class="form-check-input" type="checkbox" id="chk_tag5" onchange="toggleEdit('tag5',this.checked);" "#<chk_tag5>"="")
+                            label(class="form-check-label" "for"="chk_tag5"){$"Etiqueta 5"}
+                        }
+                        // label(class="form-label" "for"="tag5"){$"Etiqueta 5:"}
+                        input(class="form-control rounded-0" type="text" name="tag5" value="#<tag5>" maxlength="32" size="32" id="tag5" "#<dis_tag5>"="" spellcheck="false")
                     }
                 }
             }
@@ -112,6 +140,10 @@ module "form.dk"
                 // script(src=""){$""}
                 script(type="text/javascript")
                 {$'
+                    function toggleEdit(target,value) {
+                        document.getElementById(target).disabled = !value;
+                    }
+
                     document.addEventListener("DOMContentLoaded", () => {
                         const btn_submit = document.getElementById("btn-submit");
                         btn_submit.addEventListener("click", () => InduxsoftCrudlModel.Submit("#<form_id>"));

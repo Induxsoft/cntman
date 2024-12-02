@@ -33,7 +33,7 @@ module "list.dk"
                 @"align":"center"
             }
         }
-        @"show-tree":@false
+        @"show-tree":@true
         member @"tree-opt"
         {
             @"key":"sys_pk"

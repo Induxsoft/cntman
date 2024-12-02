@@ -20,10 +20,21 @@ module "form.dk"
 	@is_new = (@_entity_id == "_new")
 
     form_id = "frm_"+@_entities_type
-    // decimals = @("#parameters/decimals")
-    // num_step = "0."+padright("",(decimals-1),"0")+"1"
-    // num_max = "9999999999."+padright("",decimals,"9")
-    // num_min = num_step
+    
+    if @is_new
+    {
+        new defvals
+        {
+            @"articles": @true
+            @"faqs": @true
+            @"forums": @true
+            @"files": @true
+            @"links": @true
+            @"training": @true
+            @"anything": @true
+        }
+        ref entity:record.copyex(defvals,entity,"*",",","",":")
+    }
 
     function print_buttons()
     {

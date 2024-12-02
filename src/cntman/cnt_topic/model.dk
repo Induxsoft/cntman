@@ -18,7 +18,7 @@ module "Temas de contenido:topic"
         IFNULL(b.title,'') padre,
         a.id,
         a.title,
-        IFNULL(a.description,'') description,
+        IFNULL(a.`description`,'') `description`,
         IF(a.private,'Sí','No') private
     FROM #<@table_name> a
         LEFT JOIN #<@table_name> b ON b.sys_pk = a.parent
