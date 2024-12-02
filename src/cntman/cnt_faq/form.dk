@@ -21,18 +21,11 @@ module "form.dk"
 
     form_id = "frm_"+@_entities_type
     
+    tag1 = fd('tag1','tx',entity)
     tag2 = fd('tag2','tx',entity)
     tag3 = fd('tag3','tx',entity)
     tag4 = fd('tag4','tx',entity)
     tag5 = fd('tag5','tx',entity)
-    chk_tag2 = ifstr(tag2!='', 'checked', '')
-    chk_tag3 = ifstr(tag3!='', 'checked', '')
-    chk_tag4 = ifstr(tag4!='', 'checked', '')
-    chk_tag5 = ifstr(tag5!='', 'checked', '')
-    dis_tag2 = ifstr(tag2=='', 'disabled', '')
-    dis_tag3 = ifstr(tag3=='', 'disabled', '')
-    dis_tag4 = ifstr(tag4=='', 'disabled', '')
-    dis_tag5 = ifstr(tag5=='', 'disabled', '')
 
     function print_buttons()
     {
@@ -41,6 +34,7 @@ module "form.dk"
         button(class="#<btn_cls>" type="button" id="btn-submit" title="Guardar"){$"#<@ICON_SAVE>"}
         #!
     }
+
     point @buttons to print_buttons
     new nav_config
     {
@@ -92,43 +86,33 @@ module "form.dk"
                         label(class="form-label" "for"="answer"){$"Respuesta:"}
                         textarea(class="form-control rounded-0" name="answer" id="answer" rows="5" spellcheck="true"){$"#<fd('answer','tx',entity)>"}
                     }
-                    div(class="col-auto") {
-                        label(class="form-label fw-bolder" "for"="tag1"){$"Etiqueta:"}
-                        input(class="form-control rounded-0" type="text" name="tag1" value="#<fd('tag1','tx',entity)>" maxlength="32" size="32" id="tag1" required="" spellcheck="false")
-                    }
-                    div(class="col-auto") {
-                        div(class="form-check mb-2") {
-                            input(class="form-check-input" type="checkbox" id="chk_tag2" onchange="toggleEdit('tag2',this.checked);" "#<chk_tag2>"="")
-                            label(class="form-check-label" "for"="chk_tag2"){$"Etiqueta 2"}
+
+                    div(class="col-12")
+                    {
+                        label(class="form-label fw-bolder" "for"=""){$"Etiquetas:"}
+                        fieldset(class="d-flex border gap-2 p-2" id="tags_container")
+                        {
+                            #!
+                            ref tags = ifnull(@("&./tags"),list.create())
+                            etiquetas = trim(fd("tags","tx",entity))
+                            for i = 0; i < list.count(tags)
+                            {
+                                tagname = @@(list.obj(tags,i), "$tagname")
+                                name = "tag"+str(i+1)
+                                id = "chk_"+name
+                                checked = ifstr(contains(etiquetas,tagname), "checked", "")
+
+                                #$
+                                div(class="form-check") {
+                                    input(class="form-check-input" type="checkbox" value="#<tagname>" id="#<id>" "#<checked>"="")
+                                    label(class="form-check-label" "for"="#<id>"){"#<tagname>"}
+                                }
+                            }
+                            #$
                         }
-                        // label(class="form-label" "for"="tag2"){$"Etiqueta 2:"}
-                        input(class="form-control rounded-0" type="text" name="tag2" value="#<tag2>" maxlength="32" size="32" id="tag2" "#<dis_tag2>"="" spellcheck="false")
-                    }
-                    div(class="col-auto") {
-                        div(class="form-check mb-2") {
-                            input(class="form-check-input" type="checkbox" id="chk_tag3" onchange="toggleEdit('tag3',this.checked);" "#<chk_tag3>"="")
-                            label(class="form-check-label" "for"="chk_tag3"){$"Etiqueta 3"}
-                        }
-                        // label(class="form-label" "for"="tag3"){$"Etiqueta 3:"}
-                        input(class="form-control rounded-0" type="text" name="tag3" value="#<tag3>" maxlength="32" size="32" id="tag3" "#<dis_tag3>"="" spellcheck="false")
-                    }
-                    div(class="col-auto") {
-                        div(class="form-check mb-2") {
-                            input(class="form-check-input" type="checkbox" id="chk_tag4" onchange="toggleEdit('tag4',this.checked);" "#<chk_tag4>"="")
-                            label(class="form-check-label" "for"="chk_tag4"){$"Etiqueta 4"}
-                        }
-                        // label(class="form-label" "for"="tag4"){$"Etiqueta 4:"}
-                        input(class="form-control rounded-0" type="text" name="tag4" value="#<tag4>" maxlength="32" size="32" id="tag4" "#<dis_tag4>"="" spellcheck="false")
-                    }
-                    div(class="col-auto") {
-                        div(class="form-check mb-2") {
-                            input(class="form-check-input" type="checkbox" id="chk_tag5" onchange="toggleEdit('tag5',this.checked);" "#<chk_tag5>"="")
-                            label(class="form-check-label" "for"="chk_tag5"){$"Etiqueta 5"}
-                        }
-                        // label(class="form-label" "for"="tag5"){$"Etiqueta 5:"}
-                        input(class="form-control rounded-0" type="text" name="tag5" value="#<tag5>" maxlength="32" size="32" id="tag5" "#<dis_tag5>"="" spellcheck="false")
                     }
                 }
+                input(type="hidden" name="tags" value="" id="tags")
             }
         }
         // Resúmenes y datos al pie
@@ -140,13 +124,32 @@ module "form.dk"
                 // script(src=""){$""}
                 script(type="text/javascript")
                 {$'
-                    function toggleEdit(target,value) {
-                        document.getElementById(target).disabled = !value;
-                    }
-
                     document.addEventListener("DOMContentLoaded", () => {
                         const btn_submit = document.getElementById("btn-submit");
-                        btn_submit.addEventListener("click", () => InduxsoftCrudlModel.Submit("#<form_id>"));
+                        const tags_container = document.getElementById("tags_container");
+                        const tags = document.getElementById("tags");
+                        
+                        btn_submit.addEventListener("click", (e) => {
+                            e.preventDefault();
+                            
+                            const checked_tags = tags_container.querySelectorAll(\'input[type="checkbox"]:checked\');
+                            let etiquetas = [];
+
+                            if (checked_tags.length < 1) {
+                                alert("Es necesario indicar al menos una etiqueta.");
+                                return
+                            }
+                            if (checked_tags.length > 5) {
+                                alert("Solo es posible seleccionar un máximo de 5 etiquetas.");
+                                return
+                            }
+
+                            checked_tags.forEach((chk) => { etiquetas.push(chk.value) });
+                            tags.value = JSON.stringify(etiquetas);
+                            
+                            InduxsoftCrudlModel.Submit("#<form_id>");
+                        });
+
                         // Script injection
                         #<@@(@crud_context,"script")>
                     });

@@ -26,7 +26,21 @@ module "Preguntas más frecuentes:faq"
         AND IF(IFNULL(@fil_text,'')='', TRUE, (q.title LIKE CONCAT('%',@fil_text,'%') OR CONCAT_WS(';', q.tag1,q.tag2,q.tag3,q.tag4,q.tag5) LIKE CONCAT('%',@fil_text,'%')))
     LIMIT #<@default_max_rows>
     "
-    @read_query = "SELECT * FROM #<@table_name> WHERE #<@keyfield> = @_entity_id LIMIT 1"
+    @read_query = "
+    SELECT
+        sys_pk,
+        sys_user,
+        sys_lastuser,
+        sys_recver,
+        topic,
+        title,
+        author,
+        IFNULL(detail,'') detail,
+        IFNULL(answer,'') answer,
+        REPLACE(CONCAT_WS('; ', tag1,tag2,tag3,tag4,tag5),' ;','') tags
+    FROM #<@table_name>
+    WHERE #<@keyfield> = @_entity_id
+    LIMIT 1"
 
     function setPrintTitles(&db,&data)
     {
@@ -57,6 +71,8 @@ module "Preguntas más frecuentes:faq"
             params<"topic"> : topic
             data<"topic*"> : dbr.rec(db,sql,params)
         }
+
+        data<"tags*"> : dbr.list(db,"select tagname from cnt_tag where not ifnull(sys_deleted,0)",@null)
 
         do setPrintTitles(db,data)
     }
@@ -180,7 +196,20 @@ module "Preguntas más frecuentes:faq"
     {
         if @@(data,"#topic") < 1 { do rise_error(511,"El valor de `Tema` es requerido.") }
         if trim(@@(data,"$title")) == "" { do rise_error(512,"El valor de `Título` es requerido.") }
-        if trim(@@(data,"$tag1")) == "" { do rise_error(513,"Es necesario indicar al menos una etiqueta.") }
+        
+        ref tags = from.json(field.dstr(data,"tags","[]"))
+        do field.remove(data,"tags")
+        
+        tags_length = list.count(tags)
+        if tags_length < 1 { do rise_error(513,"Es necesario indicar al menos una etiqueta.") }
+        if tags_length > 5 { do rise_error(514,"Solo es posible seleccionar un máximo de 5 etiquetas.") }
+
+        for i = 0; i < 5
+        {
+            field = "tag"+str(i+1)
+            data<field> : list.str(tags,i)
+            exception{ data<field> : "" }
+        }
     }
 
     catch::&db,&params,&data
