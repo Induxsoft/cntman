@@ -20,11 +20,7 @@ module "list.dk"
         @"datatable*":data
         member @"columns"
         {
-            member @"id"
-            {
-                @"caption":"ID"
-                @"align":"center"
-            }
+            member @"id" { @"caption":"ID" }
             member @"title" { @"caption":"Título" }
             member @"description" { @"caption":"Descripción" }
             member @"private"

@@ -23,6 +23,7 @@ module "Temas de contenido:topic"
     FROM #<@table_name> a
         LEFT JOIN #<@table_name> b ON b.sys_pk = a.parent
     WHERE NOT IFNULL(a.sys_deleted,0)
+        AND IF(IFNULL(@ik,'0')='0', TRUE, a.faqs)
         AND IF(IFNULL(@parent,'*')='*', TRUE, a.parent = @parent)
         AND IF(IFNULL(@search,'')='', TRUE, (a.id = @search OR a.title LIKE CONCAT('%',@search,'%')))
     ORDER BY
@@ -68,7 +69,10 @@ module "Temas de contenido:topic"
     function list(&db,&params)
     {
         //#region list()
-        if parse.bool(@@(params,"$ik")) { return entity.list(db,params) }
+        if parse.bool(@@(params,"$ik")) {
+            params<"ik"> : "1"
+            return entity.list(db,params)
+        }
 
         do dbr.apps.action.grant("TE10")
         if not(field.exist(params,"decimals")){ params<"decimals"> : parse.num(dbr.vars.get(db,"FXCA001")) }
