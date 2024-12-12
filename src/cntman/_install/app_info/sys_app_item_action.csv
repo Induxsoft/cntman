@@ -8,6 +8,6 @@ TE21,Crear etiqueta de contenido,Crear,,/!/cntman/tag/_new/,0,cntman.tag,DET0A2,
 TE22,Editar etiqueta de contenido,Editar,,/!/cntman/tag/@_src_context_item_id/,0,cntman.tag,DET0A2,1,action
 TE23,Eliminar etiqueta de contenido,Eliminar,,javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);,0,cntman.tag,DET0A2,1,action
 TE30,Preguntas más frecuentes,FAQ,,/!/cntman/faq/,0,cntman.faq,DET0A3,0,shortcut
-TE31,Nueva FAQ,Nuevo,,/!/cntman/faq/_new/,0,cntman.faq,DET0A3,0,action
-TE32,Editar FAQ,Editar,,/!/cntman/faq/@_src_context_item_id/,0,cntman.faq,DET0A3,1,action
-TE33,Eliminar FAQ,Eliminar,,javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);,0,cntman.faq,DET0A3,1,action
+TE31,Nueva pregunta frecuente,Nuevo,,/!/cntman/faq/_new/,0,cntman.faq,DET0A3,0,action
+TE32,Editar pregunta frecuente,Editar,,/!/cntman/faq/@_src_context_item_id/,0,cntman.faq,DET0A3,1,action
+TE33,Eliminar pregunta frecuente,Eliminar,,javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);,0,cntman.faq,DET0A3,1,action

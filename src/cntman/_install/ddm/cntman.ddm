@@ -38,5 +38,15 @@ model "cntman"
         @"tag3" string(32)
         @"tag4" string(32)
         @"tag5" string(32)
+        @"viewcount" int // Cantidad de veces que la pregunta a sido vista.
+        @"rank" decimal(2,1) // Calificación de la pregunta 1-5 estrellas.
+        @"rankcount" int // Cantidad de usuarios que han calificado la pregunta.
+
+        /* index "idx01" fulltext
+        {
+            field "title"
+            field "detail"
+            field "answer"
+        } */
     }
 }
