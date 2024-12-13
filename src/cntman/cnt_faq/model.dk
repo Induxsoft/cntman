@@ -72,7 +72,7 @@ module "Preguntas más frecuentes:faq"
             data<"topic*"> : dbr.rec(db,sql,params)
         }
 
-        data<"tags*"> : dbr.list(db,"select tagname from cnt_tag where not ifnull(sys_deleted,0)",@null)
+        data<"tags*"> : dbr.list(db,"select tagname from cnt_tag where not ifnull(sys_deleted,0) order by tagname asc",@null)
 
         do setPrintTitles(db,data)
     }
