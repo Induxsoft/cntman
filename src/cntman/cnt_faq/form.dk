@@ -90,7 +90,7 @@ module "form.dk"
                     div(class="col-12")
                     {
                         label(class="form-label fw-bolder" "for"=""){$"Etiquetas:"}
-                        fieldset(class="d-flex border gap-2 p-2" id="tags_container")
+                        fieldset(class="d-flex flex-wrap overflow-auto border gap-2 p-2" id="tags_container" style="max-height:250px;")
                         {
                             #!
                             ref tags = ifnull(@("&./tags"),list.create())

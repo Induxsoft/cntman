@@ -18,7 +18,8 @@ module "Etiquetas de contenido:tag"
         IFNULL(description,'') description
     FROM #<@table_name>
     WHERE NOT IFNULL(sys_deleted,0)
-        AND IF(IFNULL(@fil_text,'')!='', (tagname LIKE CONCAT('%',@fil_text,'%')), TRUE)
+        AND IF(IFNULL(@fil_text,'')!='', (tagname = @fil_text OR description LIKE CONCAT('%',@fil_text,'%')), TRUE)
+    ORDER BY tagname ASC
     LIMIT #<@default_max_rows>
     "
     @read_query = "SELECT sys_pk, sys_recver, tagname, IFNULL(description,'') description FROM #<@table_name> WHERE #<@keyfield> = @_entity_id LIMIT 1"
