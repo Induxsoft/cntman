@@ -1,13 +1,31 @@
 "id","title","shorttitle","icon16x16","href","_blank","appid","itemtype","req_context_item_id","act_type"
+
 TE10,Temas de contenido,Temas,,/!/cntman/topic/,0,cntman.topic,DET0A1,0,shortcut
 TE11,Crear tema de contenido,Crear,,/!/cntman/topic/_new/?parent=@_src_context_item_id,0,cntman.topic,DET0A1,0,action
 TE12,Editar tema de contenido,Editar,,/!/cntman/topic/@_src_context_item_id/,0,cntman.topic,DET0A1,1,action
-TE13,Eliminar tema de contenido,Eliminar,,javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);,0,cntman.topic,DET0A1,1,action
+TE13,Eliminar tema de contenido,Eliminar,,"javascript:InduxsoftCrudlModel.Delete(`@_src_context_item_id`);",0,cntman.topic,DET0A1,1,action
+
 TE20,Etiquetas de contenido,Etiquetas,,/!/cntman/tag/,0,cntman.tag,DET0A2,0,shortcut
 TE21,Crear etiqueta de contenido,Crear,,/!/cntman/tag/_new/,0,cntman.tag,DET0A2,0,action
 TE22,Editar etiqueta de contenido,Editar,,/!/cntman/tag/@_src_context_item_id/,0,cntman.tag,DET0A2,1,action
-TE23,Eliminar etiqueta de contenido,Eliminar,,javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);,0,cntman.tag,DET0A2,1,action
+TE23,Eliminar etiqueta de contenido,Eliminar,,"javascript:InduxsoftCrudlModel.Delete(`@_src_context_item_id`);",0,cntman.tag,DET0A2,1,action
+
 TE30,Preguntas más frecuentes,FAQ,,/!/cntman/faq/,0,cntman.faq,DET0A3,0,shortcut
 TE31,Nueva pregunta frecuente,Nuevo,,/!/cntman/faq/_new/,0,cntman.faq,DET0A3,0,action
 TE32,Editar pregunta frecuente,Editar,,/!/cntman/faq/@_src_context_item_id/,0,cntman.faq,DET0A3,1,action
-TE33,Eliminar pregunta frecuente,Eliminar,,javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);,0,cntman.faq,DET0A3,1,action
+TE33,Eliminar pregunta frecuente,Eliminar,,"javascript:InduxsoftCrudlModel.Delete(`@_src_context_item_id`);",0,cntman.faq,DET0A3,1,action
+
+TE40,Rutas de capacitación,Rutas,,/!/cntman/rutascap/,0,cntman.rutascap,DET0A6,0,shortcut
+TE41,Crear ruta de capacitación,Crear,,/!/cntman/rutascap/_new/,0,cntman.rutascap,DET0A6,0,action
+TE42,Editar ruta de capacitación,Editar,,/!/cntman/rutascap/@_src_context_item_id/,0,cntman.rutascap,DET0A6,1,action
+TE43,Eliminar ruta de capacitación,Eliminar,,"javascript:InduxsoftCrudlModel.Delete(`@_src_context_item_id`);",0,cntman.rutascap,DET0A6,1,action
+
+TE50,Cursos de capacitación,Cursos,,/!/cntman/cursoscap/,0,cntman.cursoscap,DET0A7,0,shortcut
+TE51,Crear curso de capacitación,Crear,,/!/cntman/cursoscap/_new/,0,cntman.cursoscap,DET0A7,0,action
+TE52,Editar curso de capacitación,Editar,,/!/cntman/cursoscap/@_src_context_item_id/,0,cntman.cursoscap,DET0A7,1,action
+TE53,Eliminar curso de capacitación,Eliminar,,"javascript:InduxsoftCrudlModel.Delete(`@_src_context_item_id`);",0,cntman.cursoscap,DET0A7,1,action
+
+TE60,Temas de capacitación,Temas,,/!/cntman/temascap/,0,cntman.temascap,DET0A8,0,shortcut
+TE61,Crear tema de capacitación,Crear,,/!/cntman/temascap/_new/,0,cntman.temascap,DET0A8,0,action
+TE62,Editar tema de capacitación,Editar,,/!/cntman/temascap/@_src_context_item_id/,0,cntman.temascap,DET0A8,1,action
+TE63,Eliminar tema de capacitación,Eliminar,,"javascript:InduxsoftCrudlModel.Delete(`@_src_context_item_id`);",0,cntman.temascap,DET0A8,1,action

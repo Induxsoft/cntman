@@ -15,3 +15,18 @@ TE30,Preguntas más frecuentes,cntman.faq
 TE31,Nueva FAQ,cntman.faq
 TE32,Editar FAQ,cntman.faq
 TE33,Eliminar FAQ,cntman.faq
+cntman.rutascap,Rutas de capacitación,cntman
+TE40,Rutas de capacitación,cntman.rutascap
+TE41,Crear ruta de capacitación,cntman.rutascap
+TE42,Editar ruta de capacitación,cntman.rutascap
+TE43,Eliminar ruta de capacitación,cntman.rutascap
+cntman.cursoscap,Cursos de capacitación,cntman
+TE50,Cursos de capacitación,cntman.cursoscap
+TE51,Crear curso de capacitación,cntman.cursoscap
+TE52,Editar curso de capacitación,cntman.cursoscap
+TE53,Eliminar curso de capacitación,cntman.cursoscap
+cntman.temascap,Temas de capacitación,cntman
+TE60,Temas de capacitación,cntman.temascap
+TE61,Crear tema de capacitación,cntman.temascap
+TE62,Editar tema de capacitación,cntman.temascap
+TE63,Eliminar tema de capacitación,cntman.temascap

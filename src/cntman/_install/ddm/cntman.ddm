@@ -49,4 +49,54 @@ model "cntman"
             field "answer"
         } */
     }
+
+    entity "cnt_ruta" : "TableModel"
+    {
+        @"id" string(32) unique required
+        @"titulo" string(150) required
+        @"objetivo" memo
+        @"audiencia" memo
+        @"descripcion" memo
+    }
+
+    entity "cnt_ruta_det" : "TableModel"
+    {
+        @"orden" int //Entero usado para establecer la secuencia ordenada
+        @"ruta" ref:"cnt_ruta" required
+        @"curso" ref:"cnt_curso" required
+        
+        index "cnt_ruta_det_uq1" unique
+        {
+            field "ruta"
+            field "curso"
+        }
+    }
+
+    entity "cnt_curso" : "TableModel"
+    {
+        @"topic" ref:"cnt_topic"
+        @"id" string(32) unique required
+        @"titulo" string(150) required
+        @"objetivo" memo
+        @"audiencia" memo
+        @"descripcion" memo
+        @"contenido" memo
+        @"tag1" string(32)
+        @"tag2" string(32)
+        @"tag3" string(32)
+        @"tag4" string(32)
+        @"tag5" string(32)
+    }
+
+    entity "cnt_curso_tema" : "TableModel"
+    {
+        @"orden" int //Entero usado para establecer la secuencia ordenada
+        @"curso" ref:"cnt_curso" required
+        @"titulo" string(150) required
+        @"objetivo" memo
+        @"descripcion" memo
+        @"contenido" memo
+        @"url_video" string(1024)
+        @"duracion" int //En minutos
+    }
 }

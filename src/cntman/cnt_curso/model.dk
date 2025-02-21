@@ -1,0 +1,356 @@
+#include "dkli.dkh"
+#!
+module "Cursos de capacitación :curso"
+{
+    @table_name = "cnt_curso" // params._entities_type
+    @keyfield = "sys_pk" // params._key
+    // @create_fields = "*"
+    // @update_fields = "*"
+    // @create_exclude_fields = ""
+    @update_exclude_fields = "sys_pk,sys_guid,sys_dtcreated,sys_user"
+    // @create_alias_fields = ""
+    // @update_alias_fields = ""
+
+    @list_query = "
+    SELECT
+        c.sys_pk,
+        c.sys_guid,
+        t.title AS tema,
+        c.id,
+        c.titulo,
+        REPLACE(CONCAT_WS('; ', c.tag1,c.tag2,c.tag3,c.tag4,c.tag5),' ;','') tags
+    FROM #<@table_name> c
+        LEFT JOIN cnt_topic t ON c.topic = t.sys_pk
+    WHERE NOT IFNULL(c.sys_deleted,0)
+        AND IF(IFNULL(@topic,'*')='*', TRUE, c.topic = @topic)
+        AND IF(IFNULL(@search,'')='', TRUE, (c.id = @search OR c.titulo LIKE CONCAT('%',@search,'%') OR CONCAT_WS(';', c.tag1,c.tag2,c.tag3,c.tag4,c.tag5) LIKE CONCAT('%',@search,'%')))
+    LIMIT #<@default_max_rows>
+    "
+    @read_query = "
+    SELECT
+        sys_pk,
+        sys_guid,
+        sys_user,
+        sys_lastuser,
+        sys_recver,
+        topic,
+        id,
+        titulo,
+        IFNULL(objetivo,'') objetivo,
+        IFNULL(audiencia,'') audiencia,
+        IFNULL(descripcion,'') descripcion,
+        IFNULL(contenido,'') contenido,
+        REPLACE(CONCAT_WS('; ', tag1,tag2,tag3,tag4,tag5),' ;','') tags
+    FROM #<@table_name>
+    WHERE #<@keyfield> = @_entity_id
+    LIMIT 1
+    "
+    @childs_query = "
+    SELECT
+        t.sys_pk,
+        t.sys_guid,
+        t.sys_recver,
+        IFNULL(t.orden,0) orden,
+        t.titulo,
+        IFNULL(t.objetivo,'') objetivo,
+        IFNULL(t.descripción,'') descripcion,
+        IFNULL(t.contenido,'') contenido,
+        IFNULL(t.url_video,'') url_video,
+        IFNULL(t.duracion,0) duracion
+    FROM cnt_curso_tema t
+    WHERE t.curso = COALESCE(@_entity_id,@icurso,@sys_pk)
+    "
+
+    function setPrintTitles(&db,&data)
+    {
+        using data
+        {
+            member @"titles"
+            {
+                @"title": dbr.vars.getd(db,"FXCA108","")
+                @"subtitle": dbr.vars.getd(db,"FXCA109","")
+                @"subtitle_2": dbr.vars.getd(db,"FXCA110","")
+                @"footer": dbr.vars.getd(db,"FXCA111","")
+            }
+        }
+    }
+
+    function prepareView(&db,&params,&data)
+    {
+        //#region prepareView()
+        isnew = (@@(params,"$_entity_id") == "_new")
+
+        ref _detalle = @null
+        
+        if field.exist(data,"form") { params<"topic"> : @@(data,"#form/topic") }
+        else if field.exist(data,"entity")
+        {
+            params<"topic"> : @@(data,"#entity/topic")
+
+            t = field.typeof(data,"entity/_detalle")
+            if t == 1 { ref _detalle:from.json(@@(data,"$entity/_detalle")) }
+            if t == 3 { ref _detalle:@@(data,"&entity/_detalle") }
+            do field.remove(data,"entity/_detalle")
+        }
+
+        if isnull(_detalle) && not(isnew) { ref _detalle:dbr.list(db,@childs_query,params) }
+        if @@(params,"#topic") > 0 {
+            sql = "select sys_pk, id, title, if(private,'Sí','No') private from cnt_topic where sys_pk = @topic"
+            data<"topic*"> : dbr.rec(db,sql,params)
+        }
+
+        data<"tags*"> : dbr.list(db,"select tagname from cnt_tag where not ifnull(sys_deleted,0) order by tagname asc",@null)
+        data<"detail*"> : _detalle
+    }
+
+    function list(&db,&params)
+    {
+        //#region list()
+        do dbr.apps.action.grant("TE50")
+
+        ref lista = entity.list(db,params)
+        if parse.bool(@@(params,"$only-list")) { return lista }
+        new data
+        {
+            @"data*": lista
+            @"itemactions*": dbr.apps.itemactions(db,"DET0A7","action","",0)
+            @"itemreports*": dbr.apps.itemactions(db,"DET0A7","report","",0)
+            @"topics*": dbr.list(db,"select sys_pk, title from cnt_topic where not ifnull(sys_deleted,0)",@null)
+        }
+        do setPrintTitles(db,data)
+        
+        return data
+
+        exception{ do catch(db,params,@null) }
+    }
+
+    function read(&db,&params)
+    {
+        //#region read()
+        do dbr.apps.action.grant("TE50")
+
+        if not(isset("@just_read_entity")) { @just_read_entity = @false }
+        if @just_read_entity { return entity.read(db,params) }
+
+        new data { @"entity*": entity.read(db,params) }
+        do prepareView(db,params,data)
+        return data
+
+        exception{ do catch(db,params,@null) }
+    }
+
+    function blank(&db,&params)
+    {
+        //#region blank()
+        do dbr.apps.action.grant("TE50")
+        
+        new data {}
+        do prepareView(db,params,data)
+        return data
+        
+        exception{ do catch(db,params,@null) }
+    }
+
+    function create(&db,&params,&data)
+    {
+        //#region create()
+        @use_transaction = @false
+        @just_read_entity = @true
+        
+        do dbr.apps.action.pre("TE51")
+        do dbr.begin(db)
+
+        ref curso = validateFields(data)
+        ref entity = entity.create(db,params,curso)
+
+        do dbr.apps.action.pos(entity)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(entity)
+
+        return entity
+
+        exception{ do catch(db,params,data) }
+    }
+
+    function update(&db,&params,&data)
+    {
+        //#region update()
+        @use_transaction = @false
+        @just_read_entity = @true
+        
+        do dbr.apps.action.pre("TE52")
+        do dbr.begin(db)
+
+        ref curso = validateFields(data)
+        ref entity = entity.update(db,params,curso)
+
+        do dbr.apps.action.pos(entity)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(entity)
+
+        return entity
+
+        exception{ do catch(db,params,data) }
+    }
+
+    function delete(&db,&params)
+    {
+        //#region delete()
+        @use_transaction = @false
+        
+        do dbr.apps.action.pre("TE53")
+        do dbr.begin(db)
+
+        ref entity = entity.read(db,params)
+        deleted = @false
+
+        codeblock "Intentar eliminación física"
+        {
+            do dbr.begin(db)
+
+            do dbr.delete(db,"cnt_curso_tema","curso=@_entity_id",params)
+            ref entity:entity.delete(db,params)
+
+            do dbr.apps.action.pos(entity)
+            do dbr.commit(db)
+            deleted = @true
+            do dbr.apps.action.ext(entity)
+
+            exception
+            {
+                if dbr.in_transaction(db) { do dbr.rollback(db) }
+                do dbr.apps.action.log()
+                do pop_exception()
+            }
+        }
+        if not(deleted)
+        {
+            do dbr.begin(db)
+
+            sql = ftext("
+            UPDATE #<@table_name> SET
+                sys_deleted = 1,
+                sys_info = id,
+                id = CONCAT('~',sys_pk)
+            WHERE #<@keyfield> = @_entity_id
+            ")
+            
+            do dbr.execute(db,sql,params)
+            using entity
+            {
+                @"sys_deleted": @true
+                @"sys_info": @@(entity,"$id")
+                @"id": "~"+@@(entity,"$sys_pk")
+            }
+
+            do dbr.apps.action.pos(entity)
+            do dbr.commit(db)
+            do dbr.apps.action.ext(entity)
+        }
+
+        do dbr.apps.action.pos(entity)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(entity)
+
+        return entity
+
+        exception{ do catch(db,params,@null) }
+    }
+
+    function validateFields(&data)
+    {
+        //#region validateFields()
+        isnew = (@@(data,"#sys_pk") < 1)
+        id = trim(@@(data,"$id"))
+        titulo = trim(@@(data,"$titulo"))
+
+        if @@(data,"#topic") < 1 { do field.remove(data,"topic") }
+        if id == "" { do rise_error(511,"El valor de `ID` es requerido.") }
+        if titulo == "" { do rise_error(512,"El valor de `Título` es requerido.") }
+        
+        ref tags = from.json(field.dstr(data,"tags","[]"))
+        tags_length = list.count(tags)
+
+        if tags_length < 1 { do rise_error(513,"Es necesario indicar al menos una etiqueta.") }
+        if tags_length > 5 { do rise_error(514,"Solo es posible seleccionar un máximo de 5 etiquetas.") }
+
+        ref curso = record.copy(data,"*")
+        do field.remove(curso,"tags")
+        do field.remove(curso,"_detalle")
+
+        for i = 0; i < 5
+        {
+            field = "tag"+str(i+1)
+            curso<field> : list.str(tags,i)
+            exception
+            {
+                do pop_exception()
+                curso<field> : ""
+            }
+        }
+
+        using curso
+        {
+            @"sys_user": @@(@http_context, "$session/user/uid")
+            @"sys_lastuser": @@(@http_context, "$session/user/uid")
+            @"id": id
+            @"titulo": titulo
+        }
+
+        if field.exist(data,"_detalle") {
+            fields = "orden,curso,titulo,objetivo,descripcion,contenido,url_video,duracion"
+
+            t = field.typeof(data,"_detalle")
+            if t == 1 { curso<"_detalle*"> : from.json(@@(data,"$_detalle")) }
+            if t == 3 { curso<"_detalle*"> : @@(data,"&_detalle") }
+
+            if not(isnew) { fields = fields + ",sys_pk,sys_recver" }
+
+            using @childs
+            {
+                member "_detalle"
+                {
+                    @"joinfield": "curso"
+                    @"keyfield": "sys_pk"
+                    @"table": "cnt_curso_tema"
+                    @"select_query": @childs_query
+                    @"fields": fields
+                }
+            }
+        }
+
+        return curso
+    }
+
+    catch::&db,&params,&data
+    {
+        //#region catch
+        code = last_error_code()
+        error = last_error()
+
+        if dbr.in_transaction(db) { do dbr.rollback(db) }
+        if isset("@@_action_context") { do dbr.apps.action.log() }
+
+        if isanyword(@@(params,"$_operation"),"create,update")
+        {
+            if isnull(data) { ref data:record.create() }
+            if contains(error,"Duplicate entry") { error = "Entrada duplicada, ya existe un registro con los mismos valores." }
+
+            ref FormData = record.copy(data,"*")
+            do record.clear(data)
+            data<"form*"> : FormData
+            
+            do prepareView(db,params,data)
+        }
+        
+        do clear_exceptions()
+        do rise_error(code,error)
+    }
+
+    point @list to curso.list
+    point @read to curso.read
+    point @blank to curso.blank
+    point @create to curso.create
+    point @update to curso.update
+    point @delete to curso.delete
+}

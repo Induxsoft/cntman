@@ -1,1 +1,31 @@
-[{"pattern":"/_program/","routes":[{"route":"/tag/","entity_type":"cnt_tag"},{"route":"/faq/","entity_type":"cnt_faq"},{"route":"/topic/","entity_type":"cnt_topic"}]}]
+[
+    {
+        "pattern": "/_program/",
+        "routes": [
+            {
+                "route": "/tag/",
+                "entity_type": "cnt_tag"
+            },
+            {
+                "route": "/faq/",
+                "entity_type": "cnt_faq"
+            },
+            {
+                "route": "/topic/",
+                "entity_type": "cnt_topic"
+            },
+            {
+                "route": "/rutascap/",
+                "entity_type": "cnt_ruta"
+            },
+            {
+                "route": "/cursoscap/",
+                "entity_type": "cnt_curso"
+            },
+            {
+                "route": "/temascap/",
+                "entity_type": "cnt_curso_tema"
+            }
+        ]
+    }
+]
