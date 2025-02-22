@@ -1,6 +1,7 @@
 var cursoscap = {
     formid:"", form:null, ff:null,
     stackid:"", stack:null,
+    tableid:"", table:null,
     requesting:false,
     url_exit:"",
     currindex: -1,
@@ -10,9 +11,16 @@ var cursoscap = {
     {
         this.form = document.getElementById(this.formid);
         this.stack = document.getElementById(this.stackid);
+        this.table = document.getElementById(this.tableid);
         this.ff = this.form.elements;
 
         const btn_submit = document.getElementById("btn-submit");
+        const btn_upl_mini = document.getElementById("btn-upl-mini");
+        const btn_del_mini = document.getElementById("btn-del-mini");
+        const btn_upl_port = document.getElementById("btn-upl-port");
+        const btn_del_port = document.getElementById("btn-del-port");
+        const miniatura = document.getElementById("miniatura");
+        const portada = document.getElementById("portada");
         const btn_up = document.getElementById("btn-up");
         const btn_down = document.getElementById("btn-down");
         const btn_add = document.getElementById("btn-add");
@@ -23,15 +31,51 @@ var cursoscap = {
         const mdl_tema = document.getElementById("modal-tema");
 
         btn_submit.addEventListener("click", (e) => this.submit());
+        miniatura.addEventListener("change", (event) => {
+            const miniprev = document.getElementById("mini-prev");
+            const caption = document.getElementById("mini-caption");
+            const file = event.target.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    miniprev.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+                caption.textContent = file.name;
+            }
+            else {
+                miniprev.src = "#";
+                caption.textContent = "";
+            }
+        });
+        portada.addEventListener("change", (event) => {
+            const portprev = document.getElementById("port-prev");
+            const caption = document.getElementById("port-caption");
+            const file = event.target.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    portprev.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+                caption.textContent = file.name;
+            }
+            else {
+                portprev.src = "#";
+                caption.textContent = "";
+            }
+        });
+        btn_up.addEventListener("click", (e) => this.UpRow());
+        btn_down.addEventListener("click", (e) => this.DownRow());
         btn_edt.addEventListener("click", (e) => this.loadTopicModal());
+        btn_del.addEventListener("click", (e) => this.deletetemacap());
         btn_tema_1.addEventListener("click", (e) => this.saveTopicModal());
         mdl_tema.addEventListener("hidden.bs.modal", (e) => { document.querySelector("#mdl-frm-tema").reset(); });
-        this.stack.onElementClick = (item, index) => {
-            this.currindex = index;
-            this.curritem = item;
-        };
 
         this.setKeyboardShortcuts();
+        this.setTableEvents();
     },
 
     setKeyboardShortcuts()
@@ -51,7 +95,155 @@ var cursoscap = {
         });
     },
 
+    setStackEvents()
+    {
+        if (!this.stack) return;
+
+        this.stack.onElementClick = (item, index) => {
+            this.currindex = index;
+            this.curritem = item;
+        };
+        // Establecer observador al 'stack' para controlar la adición, eliminación o movimiento de elementos hijos.
+        /* const observer = new MutationObserver((mutationsList, observer) => {
+            for (const mutation of mutationsList) {
+                if (mutation.type === 'childList') {
+                    console.log('> Nodos eliminados');
+                    mutation.removedNodes.forEach(node => {
+                        console.log(node)
+                    });
+                    console.log('> Nuevos nodos');
+                    mutation.addedNodes.forEach(node => {
+                        console.log(node)
+                    });
+                }
+            }
+        });
+        const config = { childList: true, subtree: true };
+        observer.observe(this.stack._stackContainer, config); */
+    },
+
+    setTableEvents()
+    {
+        if (!this.table) return;
+        const events = this.table.EdiTable.Const.Events;
+
+        this.table.Events[events.RowChanged] = (e) => {
+            this.currindex = e.index;
+            this.curritem = this.table.DataArray[e.index];
+        };
+        this.table.Events[events.RowDeleted] = (e) => {
+            this.currindex = -1;
+            this.curritem = null;
+            this.enumerar();
+        };
+        this.table.Events[events.RowAdded] = (e) => {
+            let item = this.table.DataArray[e.rowIndex];
+            // Agregamos un identificador si no lo tiene para el correcto funcionamiento de las funciones de arbol (agregar hijos, mover de posición, etc).
+            if (item) this.table._resolveKey(item);
+        };
+        this.table.Events[events.RowMoved] = (e) => {
+            this.enumerar();
+        };
+        this.table.Events[events.BeforeUpdateCell] = (e) => { this.validateRowCells(e) };
+        this.table.Events[events.ConfirmEdition] = (e) => { this.confirmRowCells(e) };
+    },
+
     stackData(){ return this.stack?.getData() ?? [] },
+    tableData(){ return (this.table?.DataArray??[]).filter(row => Object.keys(row??{}).length >= this.table.Columns.length) },
+
+    enumerar()
+    {
+        let array = this.tableData();
+        for (let i = 0; i < array.length; i++) {
+            const row = array[i];
+            row.orden = (i+1);
+        }
+        this.table._printRows();
+    },
+
+    UpRow()
+    {
+        let column = this.table.CurrentColIndex();
+        let curidx = this.table.CurrentRowIndex();
+        let nvoidx = (curidx - 1);
+        if (nvoidx < 0) return;
+
+        let a = this.table.DataArray[nvoidx];
+        let b = this.table.DataArray[curidx];
+        
+        a.orden = (a.orden + 1);
+        b.orden = (b.orden - 1);
+        
+        this.table.DataArray[nvoidx] = b;
+        this.table.UpdateRow(nvoidx);
+        this.table.DataArray[curidx] = a;
+        this.table.UpdateRow(curidx);
+        // Evitar perder el foco para seguir manipulando la misma fila.
+        this.table.NavTo(nvoidx,column);
+    },
+
+    DownRow()
+    {
+        let column = this.table.CurrentColIndex();
+        let curidx = this.table.CurrentRowIndex();
+        let nvoidx = (curidx + 1);
+        if (nvoidx == this.tableData().length) return;
+
+        let a = this.table.DataArray[curidx];
+        let b = this.table.DataArray[nvoidx];
+        
+        a.orden = (a.orden + 1);
+        b.orden = (b.orden - 1);
+        
+        this.table.DataArray[nvoidx] = a;
+        this.table.UpdateRow(nvoidx);
+        this.table.DataArray[curidx] = b;
+        this.table.UpdateRow(curidx);
+        // Evitar perder el foco para seguir manipulando la misma fila.
+        this.table.NavTo(nvoidx,column);
+    },
+
+    validateRowCells(e)
+    {
+        let field = e.coldef.field;
+        let index = e.sender.RowIndexOfTd(e.td);
+        let item = this.table?.DataArray[index] ?? {};
+
+        // if (Object.keys(item).length < 1) return false;
+        // console.log(typeof e.text, e.text);
+
+        if (field == "duracion" && Number(e.text) < 0) {
+            alert("El valor para '"+field+"' debe ser mayor a 0.");
+            // e.cancel = true; //comentado por bucle.
+            e.text = item[field];
+            return false;
+        }
+
+        return true;
+    },
+
+    confirmRowCells(e)
+    {
+        let field = e.coldef.field;
+        let index = e.sender.RowIndexOfTd(e.td);
+        let item = this.table?.DataArray[index] ?? {};
+
+        if ((item?.[field]??"") == e.text) return;
+
+        if (field == "titulo") {
+            if (!item.sys_guid) {
+                item.sys_guid = tools.uuid();
+                item.orden = (this.tableData().length + 1);
+            }
+            item.titulo = e.text;
+        }
+        if (field == "duracion") {
+            item.duracion = Number(e.text);
+        }
+        
+        this.table.DataArray[index] = item;
+        this.table.UpdateRow(index);
+    },
 
     loadTopicModal()
     {
@@ -60,13 +252,13 @@ var cursoscap = {
         let fields = form.elements;
 
         fields["id"].value = this.curritem?.sys_guid ?? "";
-        fields["orden"].value = this.curritem.orden;
-        fields["titulo"].value = this.curritem.titulo;
-        fields["objetivo"].value = this.curritem.objetivo;
-        fields["descripcion"].value = this.curritem.descripcion;
-        fields["contenido"].value = this.curritem.contenido;
-        fields["url_video"].value = this.curritem.url_video;
-        fields["duracion"].value = this.curritem.duracion;
+        fields["orden"].value = this.curritem?.orden ?? 0;
+        fields["titulo"].value = this.curritem?.titulo ?? "";
+        fields["objetivo"].value = this.curritem?.objetivo ?? "";
+        fields["descripcion"].value = this.curritem?.descripcion ?? "";
+        fields["contenido"].value = this.curritem?.contenido ?? "";
+        fields["url_video"].value = this.curritem?.url_video ?? "";
+        fields["duracion"].value = this.curritem?.duracion ?? 0;
 
         tools.showModal("modal-tema");
     },
@@ -75,32 +267,45 @@ var cursoscap = {
     {
         const form = document.querySelector("#mdl-frm-tema");
         let fields = form.elements;
-        let isnew = (fields["id"].value == "");
 
         if (!form.reportValidity()) return;
 
-        let data = this.stackData();
+        let isnew = (fields["id"].value == "");
+        let index = this.table.CurrentRowIndex();
+        let array = this.table?.DataArray ?? [];
+        let data = this.tableData();
         let item = data.find(obj => obj.sys_guid == fields["id"].value) ?? {};
+
         Object.assign(item, {
-            orden: (isnew ? data.length + 1 : Number(fields["orden"].value)),
             titulo: fields["titulo"].value,
             objetivo: fields["objetivo"].value,
             descripcion: fields["descripcion"].value,
             contenido: fields["contenido"].value,
             url_video: fields["url_video"].value,
-            duracion: Number(fields["duracion"].value)
+            duracion: Number(fields["duracion"].value),
+            minutos: Number(fields["duracion"].value) + " min"
         });
 
-        if (isnew) { data.push(item); }
-        else
-        {
-            let index = data.indexOf(obj => obj.sys_guid == fields["id"].value);
-            data[index] = item;
+        if (isnew) {
+            if (array.length == data.length) this.table.AddRow();
+            index = data.length;
+
+            item.sys_guid = tools.uuid();
+            item.orden = (data.length + 1);
         }
 
-        this.stack?.setData(data);
-
+        array[index] = item;
+        this.table.UpdateRow(index);
         tools.hideModal("modal-tema");
+    },
+
+    deletetemacap()
+    {
+        if (this.currindex < 0 || !this.curritem) return;
+        let data = this.tableData();
+        if (data.length < 1 || !confirm("¿Esta seguro que desea remover el tema seleccionado?")) return;
+
+        this.table.DeleteRow(this.currindex);
     },
 
     submit()
@@ -128,7 +333,7 @@ var cursoscap = {
             checked_tags.forEach((chk) => { etiquetas.push(chk.value) });
             tags.value = JSON.stringify(etiquetas);
 
-            InduxsoftCrudlModel.Submit(this.form, {_detalle:this.stackData()});
+            InduxsoftCrudlModel.Submit(this.form, {_detalle:this.tableData()});
         }
         catch (error) { console.error(error) }
         finally { this.requesting = false; }

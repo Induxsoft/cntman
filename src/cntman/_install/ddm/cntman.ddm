@@ -81,6 +81,8 @@ model "cntman"
         @"audiencia" memo
         @"descripcion" memo
         @"contenido" memo
+        @"miniatura" string(255)
+        @"portada" string(255)
         @"tag1" string(32)
         @"tag2" string(32)
         @"tag3" string(32)

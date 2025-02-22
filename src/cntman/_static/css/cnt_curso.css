@@ -1,0 +1,34 @@
+#preview-gallery {
+    width: 100%;
+    overflow-x: auto; /* Habilita el scroll horizontal */
+    white-space: nowrap; /* Evita el salto de línea dentro del contenedor */
+}
+/* .gallery-item {} */
+.btn-gallery {
+    padding: 2px 5px;
+    font-size: .725rem;
+    border-radius: .1rem;
+}
+#preview-gallery figure {
+    display: inline-block; /* Permite que los elementos se alineen horizontalmente */
+    width: 115px;
+    height: 115px;
+    padding: 2px 6px;
+    margin: 3px;
+    /* background-color: #E1E6ED; */
+    border: 2px dashed;
+    position: relative;
+    text-align: center;
+}
+#preview-gallery img {
+    max-height: 90px;
+    width: auto;
+}
+#preview-gallery figcaption {
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    text-align: left;
+    padding: 2px 5px;
+}

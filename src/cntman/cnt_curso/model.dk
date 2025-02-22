@@ -40,6 +40,8 @@ module "Cursos de capacitación :curso"
         IFNULL(audiencia,'') audiencia,
         IFNULL(descripcion,'') descripcion,
         IFNULL(contenido,'') contenido,
+        IFNULL(miniatura,'') miniatura,
+        IFNULL(portada,'') portada,
         REPLACE(CONCAT_WS('; ', tag1,tag2,tag3,tag4,tag5),' ;','') tags
     FROM #<@table_name>
     WHERE #<@keyfield> = @_entity_id
@@ -53,12 +55,14 @@ module "Cursos de capacitación :curso"
         IFNULL(t.orden,0) orden,
         t.titulo,
         IFNULL(t.objetivo,'') objetivo,
-        IFNULL(t.descripción,'') descripcion,
+        IFNULL(t.descripcion,'') descripcion,
         IFNULL(t.contenido,'') contenido,
         IFNULL(t.url_video,'') url_video,
-        IFNULL(t.duracion,0) duracion
+        IFNULL(t.duracion,0) duracion,
+        CONCAT(IFNULL(t.duracion,0),' min') minutos
     FROM cnt_curso_tema t
     WHERE t.curso = COALESCE(@_entity_id,@icurso,@sys_pk)
+    ORDER BY t.orden
     "
 
     function setPrintTitles(&db,&data)
@@ -163,6 +167,7 @@ module "Cursos de capacitación :curso"
         ref curso = validateFields(data)
         ref entity = entity.create(db,params,curso)
 
+        do saveimg(db,params,entity)
         do dbr.apps.action.pos(entity)
         do dbr.commit(db)
         do dbr.apps.action.ext(entity)
@@ -177,6 +182,9 @@ module "Cursos de capacitación :curso"
         //#region update()
         @use_transaction = @false
         @just_read_entity = @true
+
+        ref files = ifnull(@@(@http_context,"&request/files"),list.create())
+        do rise_error(0,to.json(files))
         
         do dbr.apps.action.pre("TE52")
         do dbr.begin(db)
@@ -184,6 +192,7 @@ module "Cursos de capacitación :curso"
         ref curso = validateFields(data)
         ref entity = entity.update(db,params,curso)
 
+        do saveimg(db,params,entity)
         do dbr.apps.action.pos(entity)
         do dbr.commit(db)
         do dbr.apps.action.ext(entity)
@@ -298,7 +307,7 @@ module "Cursos de capacitación :curso"
         }
 
         if field.exist(data,"_detalle") {
-            fields = "orden,curso,titulo,objetivo,descripcion,contenido,url_video,duracion"
+            fields = "orden,titulo,objetivo,descripcion,contenido,url_video,duracion"
 
             t = field.typeof(data,"_detalle")
             if t == 1 { curso<"_detalle*"> : from.json(@@(data,"$_detalle")) }
@@ -320,6 +329,11 @@ module "Cursos de capacitación :curso"
         }
 
         return curso
+    }
+
+    function saveimg(&db,&params,&data)
+    {
+        //#region saveimg
     }
 
     catch::&db,&params,&data

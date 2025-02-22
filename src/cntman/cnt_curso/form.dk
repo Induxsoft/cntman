@@ -1,6 +1,7 @@
 #include "dkli.dkh"
 #def InputKey "input-key"
 #def StackEdit "stack-edit"
+#def EditTable "edit-table"
 #!
 module "form.dk"
 {
@@ -23,7 +24,8 @@ module "form.dk"
 	@is_new = (@_entity_id == "_new")
 
     form_id = "frm_"+@_entities_type
-    stack_id = "cnt_curso_temas"
+    stack_id = "stk_temas"
+    table_id = "tbl_temas"
     
     tag1 = fd('tag1','tx',entity)
     tag2 = fd('tag2','tx',entity)
@@ -54,6 +56,7 @@ module "form.dk"
     #$
     div(class="container-fluid" id="view")
     {
+        link(href="/$/cntman/css/cnt_curso.css" rel="stylesheet"){""}
         // Filtros y acciones
         section(id="top_area")
         {
@@ -116,6 +119,39 @@ module "form.dk"
                             }
                             div(class="col-12")
                             {
+                                input(class="d-none" type="file" name="miniatura" id="miniatura" accept=".jpg,.jpeg,.png")
+                                input(class="d-none" type="file" name="portada" id="portada" accept=".jpg,.jpeg,.png")
+
+                                div(class="d-flex gap-2 my-2" id="preview-gallery")
+                                {
+                                    div(class="gallery-item border rounded"){
+                                        div(class="d-flex gap-1 align-items-center justify-content-end bg-light")
+                                        {
+                                            label(class="btn btn-gallery" "for"="miniatura" id="btn-upl-mini"){$"#<@ICON_UPLOAD>"}
+                                            button(class="btn btn-gallery" type="button" id="btn-del-mini"){$"#<@ICON_TRASH>"}
+                                        }
+                                        figure(class="figure")
+                                        {
+                                            img(class="figure-img img-fluid rounded" src="#" alt="Miniatura" id="mini-prev"){""}
+                                            figcaption(class="figure-caption" id="mini-caption"){""}
+                                        }
+                                    }
+                                    div(class="gallery-item border rounded"){
+                                        div(class="d-flex gap-1 align-items-center justify-content-end bg-light")
+                                        {
+                                            label(class="btn btn-gallery" "for"="portada" id="btn-upl-port"){$"#<@ICON_UPLOAD>"}
+                                            button(class="btn btn-gallery" type="button" id="btn-del-port"){$"#<@ICON_TRASH>"}
+                                        }
+                                        figure(class="figure")
+                                        {
+                                            img(class="figure-img img-fluid rounded" src="#" alt="Portada" id="port-prev"){""}
+                                            figcaption(class="figure-caption" id="port-caption"){""}
+                                        }
+                                    }
+                                }
+                            }
+                            div(class="col-12")
+                            {
                                 label(class="form-label fw-bolder" "for"=""){$"Etiquetas:"}
                                 fieldset(class="d-flex flex-wrap overflow-auto border gap-2 p-2" id="tags_container" style="max-height:250px;")
                                 {
@@ -154,12 +190,12 @@ module "form.dk"
                                 button(class="btn btn-sm btn-light border" type="button" id="btn-del"){$"Eliminar"}
                             }
 
-                            StackEdit(
+                            /* StackEdit(
                                 id="#<stack_id>"
                                 data="#<to.json(detail)>"
                                 title="titulo"
                                 subtitle="url_video"
-                                "caption-c"="duracion"
+                                "caption-c"="minutos"
                                 "caption-d"="orden"
                                 "control-styles"="
                                     #_stackContainer {
@@ -170,7 +206,43 @@ module "form.dk"
                                         width:100%;
                                     }
                                 "
-                            ){""}
+                            ){""} */
+
+                            /* div(class="d-flex align-items-center flex-wrap border gap-1 px-2" id="tbl_act_bar")
+                            {
+                                div(class="" id="act_bar_text"){small(class="text-muted"){""}}
+                                div(class="flex-grow-1 text-end" id="act_bar_cont"){$""}
+                            } */
+                            div(class="border border-top-0" id="div_tbl_temas" style="display:flex;width:auto;min-width:100%;")
+                            {
+                                EditTable(id="#<table_id>" data="#<to.json(detail)>" style="width:100%;"
+                                "auto-confirm"="true"
+                                "row-height"="1.2rem"
+                                "can-move-row"="true"
+                                "control-styles"="
+                                    tr th { font-size:.9rem; font-weight:500 !important; outline:none !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; -o-text-overflow:ellipsis; }
+                                    tr td { font-size:.8rem; }
+                                    
+                                    #__table_input { font-size:unset !important; }
+
+                                    @media print
+                                    {
+                                        tr th { background-color: #DCDCDC; }
+                                        tr td { background-color: #FFF !important; color:#000 !important; }
+                                    }
+                                ")
+                                {
+                                    "edit-thead"
+                                    {
+                                        "edit-tr"
+                                        {
+                                            "edit-th"(type="NoEditable" field="orden" textalign="center"){$"#"}
+                                            "edit-th"(type="Text" field="titulo" maxlength="150" width="100%"){$"Título"}
+                                            "edit-th"(type="Number" field="duracion" format="true" textalign="end" sufix=" min"){$"Duración"}
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -248,6 +320,7 @@ module "form.dk"
                     document.addEventListener("DOMContentLoaded", () => {
                         cursoscap.formid = "#<form_id>";
                         cursoscap.stackid = "#<stack_id>";
+                        cursoscap.tableid = "#<table_id>";
                         cursoscap.init();
 
                         // Script injection

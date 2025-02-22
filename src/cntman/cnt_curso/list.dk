@@ -39,7 +39,7 @@ module "list.dk"
         {
             member @"tema" { @"caption":"Tema" }
             member @"id" { @"caption":"ID" }
-            member @"title" { @"caption":"Título" }
+            member @"titulo" { @"caption":"Título" }
             member @"tags" { @"caption":"Etiquetas" }
         }
         @"table_footer":"Mostrando los primeros # registros"
