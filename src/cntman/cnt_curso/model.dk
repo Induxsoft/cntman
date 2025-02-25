@@ -319,6 +319,10 @@ module "Cursos de capacitación :curso"
             @"sys_lastuser": @@(@http_context, "$session/user/uid")
             @"id": id
             @"titulo": titulo
+            @"objetivo": HtmlEncode(trim(@@(data,"$objetivo")))
+            @"audiencia": HtmlEncode(trim(@@(data,"$audiencia")))
+            @"descripcion": HtmlEncode(trim(@@(data,"$descripcion")))
+            @"contenido": HtmlEncode(trim(@@(data,"$contenido")))
         }
 
         if field.exist(data,"_detalle") {

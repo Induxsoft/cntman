@@ -76,12 +76,21 @@ var cursoscap = {
                 this.ff["-portada"].value = "";
             }
         });
-        btn_up.addEventListener("click", (e) => this.UpRow());
-        btn_down.addEventListener("click", (e) => this.DownRow());
-        btn_edt.addEventListener("click", (e) => this.loadTopicModal());
-        btn_del.addEventListener("click", (e) => this.deletetemacap());
-        btn_tema_1.addEventListener("click", (e) => this.saveTopicModal());
-        mdl_tema.addEventListener("hidden.bs.modal", (e) => { document.querySelector("#mdl-frm-tema").reset(); });
+        btn_up.addEventListener("click", () => this.UpRow());
+        btn_down.addEventListener("click", () => this.DownRow());
+        btn_edt.addEventListener("click", () => this.loadTopicModal());
+        btn_del.addEventListener("click", () => this.deletetemacap());
+        btn_tema_1.addEventListener("click", () => this.saveTopicModal());
+        // btn_tema_0.addEventListener("click", () => {});
+        /* mdl_tema.addEventListener("show.bs.modal", (e) => {
+            e.target.removeAttribute('aria-hidden');
+            e.target.removeAttribute('inert');
+        }); */
+        mdl_tema.addEventListener("hide.bs.modal", (e) => {
+            document.querySelector("#mdl-frm-tema").reset();
+            // e.target.setAttribute('aria-hidden', 'true');
+            // e.target.setAttribute('inert', '');
+        });
 
         this.setKeyboardShortcuts();
         this.setTableEvents();
@@ -279,12 +288,11 @@ var cursoscap = {
 
         if (!form.reportValidity()) return;
 
-        let isnew = (fields["id"].value == "");
         let index = this.table.CurrentRowIndex();
-        let column = this.table.CurrentColIndex();
         let array = this.table?.DataArray ?? [];
         let data = this.tableData();
         let item = data.find(obj => obj.sys_guid == fields["id"].value) ?? {};
+        let isnew = (fields["id"].value == "");
 
         Object.assign(item, {
             titulo: fields["titulo"].value,
@@ -306,7 +314,9 @@ var cursoscap = {
 
         array[index] = item;
         this.table.UpdateRow(index);
-        this.table.NavTo(index,column);
+        this.table.NavTo(index,1);
+        this.currindex = index;
+        this.curritem = item;
         tools.hideModal("modal-tema");
     },
 

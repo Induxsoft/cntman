@@ -261,7 +261,7 @@ module "form.dk"
                 input(type="hidden" name="tags" value="" id="tags")
             }
 
-            div(class="modal fade" id="modal-tema" tabindex="-1" "data-bs-backdrop"="false" "aria-bs-hidden"="true" "aria-hidden"="true")
+            div(class="modal fade" id="modal-tema" tabindex="-1" "aria-labelledby"="modal-tema-title" "aria-hidden"="true" "data-bs-backdrop"="false")
             {
                 div(class="modal-dialog modal-lg modal-dialog-scrollable") // modal-dialog-centered
                 {
@@ -269,15 +269,15 @@ module "form.dk"
                     {
                         div(class="modal-header p-3")
                         {
-                            h6(class="modal-title"){$"Tema"}
+                            h5(class="modal-title" id="modal-tema-title"){$"Tema"}
                             button(class="btn-close btn-sm" type="button" "data-bs-dismiss"="modal" "aria-label"="Close"){$""}
                         }
                         div(class="modal-body row gx-2 p-4 bg-white")
                         {
                             form(class="row gx-2" action="#" method="POST" id="mdl-frm-tema")
                             {
-                                input(type="hidden" name="id" value="" id="tema-id")
-                                input(type="hidden" name="orden" value="" id="tema-orden")
+                                input(class="d-none" type="text" name="id" value="" id="tema-id")
+                                input(class="d-none" type="text" name="orden" value="" id="tema-orden")
 
                                 div(class="col-12")
                                 {
