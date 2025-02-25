@@ -29,3 +29,8 @@ TE60,Temas de capacitación,Temas,,/!/cntman/temascap/,0,cntman.temascap,DET0A8,
 TE61,Crear tema de capacitación,Crear,,/!/cntman/temascap/_new/,0,cntman.temascap,DET0A8,0,action
 TE62,Editar tema de capacitación,Editar,,/!/cntman/temascap/@_src_context_item_id/,0,cntman.temascap,DET0A8,1,action
 TE63,Eliminar tema de capacitación,Eliminar,,"javascript:InduxsoftCrudlModel.Delete(`@_src_context_item_id`);",0,cntman.temascap,DET0A8,1,action
+
+TE70,Gestión de contenido restringido,Leadpass,,/!/cntman/leadpass/,0,cntman.leadpass,DET0A9,0,shortcut
+TE71,Crear contenido restringido,Crear,,/!/cntman/leadpass/_new/,0,cntman.leadpass,DET0A9,0,action
+TE72,Editar contenido restringido,Editar,,/!/cntman/leadpass/@_src_context_item_id/,0,cntman.leadpass,DET0A9,1,action
+TE73,Eliminar contenido restringido,Eliminar,,"javascript:InduxsoftCrudlModel.Delete(`@_src_context_item_id`);",0,cntman.leadpass,DET0A9,1,action

@@ -1,0 +1,142 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+    #include "../_lib/config.dk"
+    #include "../_lib/lib.dk"
+	#include "../_lib/icons.dk"
+
+    do @context.begin(@crud_context)
+
+    ref entity = ifnull(@("&./entity"),record.create())
+    ref titles = ifnull(@("&./titles"),record.create())
+
+	@_entities_type = @("$parameters/_entities_type")
+	@_entity_id = @("$parameters/_entity_id")
+	@is_new = (@_entity_id == "_new")
+
+    form_id = "frm_"+@_entities_type
+
+    function print_buttons()
+    {
+        btn_cls = "btn btn-sm border-secondary induxsoft-corners btn-main-action"
+        #$
+        button(class="#<btn_cls>" type="button" id="btn-submit" title="Guardar"){$"#<@ICON_SAVE>"}
+        #!
+    }
+    point @buttons to print_buttons
+    new nav_config
+    {
+        @"title": ifstr(@is_new, "Agregar", "Editar") +" "+ "contenido"
+        @"urlexit": "../"
+        @"buttons*": @buttons
+        member @"hidden"
+        {
+            @"print": @true
+            @"send": @true
+        }
+    }
+    // Encapsula a la vista en su totalidad, todo lo que hay antes o después no se considera 
+    #$
+    div(class="container-lg" id="view")
+    {
+        // Filtros y acciones
+        section(id="top_area")
+        {
+            #!
+            do uie.printV12FormBar(nav_config)
+            #$
+        }
+        // Contenido principal
+        section(id="work_area" style="overflow-y:auto; overflow-x:hidden;")
+        {
+            div(class="alert alert-danger alert-dismissible fade show overflow-auto mb-2 #<ifstr(@('$error/message')!='','','d-none')>" role="alert") {
+                $"#<@('error/message')>"
+                button(type="button" class="btn-close" "data-bs-dismiss"="alert" "aria-label"="Close"){$""}
+            }
+            form(method="POST" action="./" id="#<form_id>")
+            {
+                input(type="hidden" name="sys_pk" value="#<@@(entity,'#sys_pk')>")
+                input(type="hidden" name="sys_recver" value="#<@@(entity,'#sys_recver')>")
+                #!
+                do uie.print_from_url_field()
+
+                if not(@is_new) {
+                    #$ div(class="d-flex gap-2 justify-content-end") {
+                        label(class="fw-bolder"){"GUID: "}
+                        label{$"#<@@(entity,'$sys_guid')>"}
+                    }
+                }
+                #$
+
+                div(class="row")
+                {
+                    div(class="col-12")
+                    {
+                        label(class="form-label" "for"="titulo"){$"Título:"}
+                        input(class="form-control rounded-0" type="text" name="titulo" value="#<fd('titulo','tx',entity)>" id="titulo" maxlength="100" spellcheck="true" required="")
+                    }
+                    div(class="col-6 col-sm-5 col-md-4")
+                    {
+                        label(class="form-label" "for"="desde"){$"Desde:"}
+                        input(class="form-control rounded-0" type="datetime-local" name="desde" value="#<fd('desde','dtm',entity)>" id="desde")
+                    }
+                    div(class="col-6 col-sm-5 col-md-4")
+                    {
+                        label(class="form-label" "for"="hasta"){$"Hasta:"}
+                        input(class="form-control rounded-0" type="datetime-local" name="hasta" value="#<fd('hasta','dtm',entity)>" id="hasta")
+                    }
+                    div(class="col-sm-2 col-md-4")
+                    {
+                        label(class="form-label" "for"="cupo"){$"Cupo:"}
+                        input(class="form-control rounded-0 text-end" type="number" name="cupo" value="#<fd('cupo','nm',entity)>" id="cupo")
+                    }
+                    div(class="col-12")
+                    {
+                        label(class="form-label" "for"="contenido"){$"Contenido"}
+                        textarea(class="form-control rounded-0" name="contenido" id="contenido" rows="3" spellcheck="true"){$"#<fd('contenido','tx',entity)>"}
+                    }
+                    div(class="col-12" title="Contenido a mostrar para indicar que debe revisar su correo")
+                    {
+                        label(class="form-label" "for"="confirmacion"){$"Confirmacion"}
+                        textarea(class="form-control rounded-0" name="confirmacion" id="confirmacion" rows="3" spellcheck="true"){$"#<fd('confirmacion','tx',entity)>"}
+                    }
+                    div(class="col-12" title="Mensaje a mostrar si el cupo ya se completó")
+                    {
+                        label(class="form-label" "for"="cupo_lleno"){$"Cupo lleno"}
+                        textarea(class="form-control rounded-0" name="cupo_lleno" id="cupo_lleno" rows="3" spellcheck="true"){$"#<fd('cupo_lleno','tx',entity)>"}
+                    }
+                    div(class="col-12" title="Contenido del mensaje de correo electrónico a enviar")
+                    {
+                        label(class="form-label" "for"="msjcorreo"){$"Cuerpo del correo"}
+                        textarea(class="form-control rounded-0" name="msjcorreo" id="msjcorreo" rows="3" spellcheck="true"){$"#<fd('msjcorreo','tx',entity)>"}
+                    }
+                }
+            }
+        }
+        // Resúmenes y datos al pie
+        section(id="bottom_area")
+        {
+            //////////////////////////////////////////////////////////////////
+            div(id="_custom_area")
+            {
+                // script(src=""){$""}
+                script(type="text/javascript")
+                {$'
+                    document.addEventListener("DOMContentLoaded", () => {
+                        const btn_submit = document.getElementById("btn-submit");
+                        btn_submit.addEventListener("click", () => InduxsoftCrudlModel.Submit("#<form_id>"));
+                        // Script injection
+                        #<@@(@crud_context,"script")>
+                    });
+                '}
+            }
+        }
+    }
+    #!
+    
+    do @context.end()
+}

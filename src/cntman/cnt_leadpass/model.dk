@@ -1,8 +1,8 @@
 #include "dkli.dkh"
 #!
-module "Temas de contenido:topic"
+module "Gestión de contenido restringido :leadpass"
 {
-    @table_name = "cnt_topic" // params._entities_type
+    @table_name = "cnt_leadpass" // params._entities_type
     @keyfield = "sys_pk" // params._key
     // @create_fields = "*"
     // @update_fields = "*"
@@ -13,23 +13,42 @@ module "Temas de contenido:topic"
 
     @list_query = "
     SELECT
-        a.sys_pk,
-        a.parent,
-        IFNULL(b.title,'') padre,
-        a.id,
-        a.title,
-        IFNULL(a.`description`,'') `description`,
-        IF(a.private,'Sí','No') private
-    FROM #<@table_name> a
-        LEFT JOIN #<@table_name> b ON b.sys_pk = a.parent
-    WHERE NOT IFNULL(a.sys_deleted,0)
-        #<where>
-    ORDER BY
-        a.parent,
-        a.sys_pk
+        sys_pk,
+        sys_guid,
+        titulo,
+        IFNULL(DATE_FORMAT(desde,'%Y-%m-%d %H:%i'),'') desde,
+        IFNULL(DATE_FORMAT(hasta,'%Y-%m-%d %H:%i'),'') hasta,
+        IFNULL(contenido,'') contenido,
+        IFNULL(confirmacion,'') confirmacion,
+        IFNULL(cupo_lleno,'') cupo_lleno,
+        IFNULL(msjcorreo,'') msjcorreo,
+        IFNULL(cupo,0) cupo,
+        IFNULL(stat_vistas,0) stat_vistas,
+        IFNULL(stat_vistas_uq,0) stat_vistas_uq
+    FROM #<@table_name>
+    WHERE NOT IFNULL(sys_deleted,0)
+        AND IF(IFNULL(@search,'')='', TRUE, (titulo LIKE CONCAT('%',@search,'%')))
     LIMIT #<@default_max_rows>
     "
-    @read_query = "SELECT * FROM #<@table_name> WHERE #<@keyfield> = @_entity_id LIMIT 1"
+    @read_query = "
+    SELECT
+        sys_pk,
+        sys_guid,
+        sys_recver,
+        titulo,
+        IFNULL(DATE_FORMAT(desde,'%Y-%m-%d %H:%i'),'') desde,
+        IFNULL(DATE_FORMAT(hasta,'%Y-%m-%d %H:%i'),'') hasta,
+        IFNULL(contenido,'') contenido,
+        IFNULL(confirmacion,'') confirmacion,
+        IFNULL(cupo_lleno,'') cupo_lleno,
+        IFNULL(msjcorreo,'') msjcorreo,
+        IFNULL(cupo,0) cupo,
+        IFNULL(stat_vistas,0) stat_vistas,
+        IFNULL(stat_vistas_uq,0) stat_vistas_uq
+    FROM #<@table_name>
+    WHERE #<@keyfield> = @_entity_id
+    LIMIT 1
+    "
 
     function setPrintTitles(&db,&data)
     {
@@ -48,53 +67,23 @@ module "Temas de contenido:topic"
     function prepareView(&db,&params,&data)
     {
         //#region prepareView()
-        is_new = (@@(params,"$_entity_id") == "_new")
-
-        parent = @@(params,"#parent")
-        if field.exist(data,"form") { parent = @@(data,"#form/parent") }
-        else if field.exist(data,"entity") { parent = @@(data,"#entity/parent") }
-
-        if parent > 0 {
-            sql = "select sys_pk,id,title,if(private,'Sí','No') private from #<@table_name> where #<@keyfield> = @parent"
-            params<"parent"> : parent
-            data<"parent*"> : dbr.rec(db,ftext(sql),params)
-        }
+        isnew = (@@(params,"$_entity_id") == "_new")
 
         do setPrintTitles(db,data)
-    }
-
-    function evaluateFilters(&params)
-    {
-        //#region evaluateFilters()
-        where = ""
-
-        if @@(params,"#parent") > 0 { where = where + " AND a.parent = @parent" }
-        if parse.bool(@@(params,"$articles")) { where = where + " AND a.articles" }
-        if parse.bool(@@(params,"$faqs")) { where = where + " AND a.faqs" }
-        if parse.bool(@@(params,"$forums")) { where = where + " AND a.forums" }
-        if parse.bool(@@(params,"$files")) { where = where + " AND a.files" }
-        if parse.bool(@@(params,"$links")) { where = where + " AND a.links" }
-        if parse.bool(@@(params,"$training")) { where = where + " AND a.training" }
-        if parse.bool(@@(params,"$anything")) { where = where + " AND a.anything" }
-        if parse.bool(@@(params,"$private")) { where = where + " AND a.private" }
-        if @@(params,"$search") != "" { where = where + " AND (a.id = @search OR a.title LIKE CONCAT('%',@search,'%'))" }
-
-        @list_query = ftext(@list_query)
     }
 
     function list(&db,&params)
     {
         //#region list()
-        do dbr.apps.action.grant("TE10")
+        if parse.bool(@@(params,"$only-list")) { return entity.list(db,params) }
 
-        do evaluateFilters(params)
-        if parse.bool(@@(params,"$only-list")){ return entity.list(db,params) }
+        do dbr.apps.action.grant("TE70")
         
         new data
         {
             @"data*": entity.list(db,params)
-            @"itemactions*": dbr.apps.itemactions(db,"DET0A1","action","",0)
-            @"itemreports*": dbr.apps.itemactions(db,"DET0A1","report","",0)
+            @"itemactions*": dbr.apps.itemactions(db,"DET0A9","action","",0)
+            @"itemreports*": dbr.apps.itemactions(db,"DET0A9","report","",0)
         }
         do setPrintTitles(db,data)
         return data
@@ -105,7 +94,7 @@ module "Temas de contenido:topic"
     function read(&db,&params)
     {
         //#region read()
-        do dbr.apps.action.grant("TE10")
+        do dbr.apps.action.grant("TE70")
 
         if not(isset("@just_read_entity")) { @just_read_entity = @false }
         if @just_read_entity { return entity.read(db,params) }
@@ -120,7 +109,7 @@ module "Temas de contenido:topic"
     function blank(&db,&params)
     {
         //#region blank()
-        do dbr.apps.action.grant("TE10")
+        do dbr.apps.action.grant("TE70")
         
         new data {}
         do prepareView(db,params,data)
@@ -135,7 +124,7 @@ module "Temas de contenido:topic"
         @use_transaction = @false
         @just_read_entity = @true
         
-        do dbr.apps.action.pre("TE11")
+        do dbr.apps.action.pre("TE71")
         do dbr.begin(db)
 
         do validateFields(data)
@@ -156,7 +145,7 @@ module "Temas de contenido:topic"
         @use_transaction = @false
         @just_read_entity = @true
         
-        do dbr.apps.action.pre("TE12")
+        do dbr.apps.action.pre("TE72")
         do dbr.begin(db)
 
         do validateFields(data)
@@ -176,7 +165,7 @@ module "Temas de contenido:topic"
         //#region delete()
         @use_transaction = @false
         
-        do dbr.apps.action.pre("TE13")
+        do dbr.apps.action.pre("TE73")
         do dbr.begin(db)
 
         ref entity = entity.delete(db,params)
@@ -192,27 +181,20 @@ module "Temas de contenido:topic"
 
     function validateFields(&data)
     {
-        //#region validateFields()
-        id = cut(trim(@@(data,"$id")),32)
-        title = cut(trim(@@(data,"$title")),150)
+        //#region validateFields
+        titulo = cut(trim(@@(data,"$titulo")),100)
 
-        if id == "" { do rise_error(511,"El valor de `ID` es requerido.") }
-        if title == "" { do rise_error(512,"El valor de `Título` es requerido.") }
-        if @@(data,"#parent") < 1 { do field.remove(data,"parent") }
-
+        if titulo == "" { do rise_error(511,"El valor de `Título` es requerido.") }
+        if @@(data,"$desde") == "" { do field.remove(data,"desde") }
+        if @@(data,"$hasta") == "" { do field.remove(data,"hasta") }
+        
         using data
         {
-            @"id": id
-            @"title": title
-            @"description": trim(@@(data,"$description"))
-            @"private": parse.bool(@@(data,"$private"))
-            @"articles": parse.bool(@@(data,"$articles"))
-            @"faqs": parse.bool(@@(data,"$faqs"))
-            @"forums": parse.bool(@@(data,"$forums"))
-            @"files": parse.bool(@@(data,"$files"))
-            @"links": parse.bool(@@(data,"$links"))
-            @"training": parse.bool(@@(data,"$training"))
-            @"anything": parse.bool(@@(data,"$anything"))
+            @"titulo": titulo
+            @"contenido": trim(@@(data,"$contenido"))
+            @"confirmacion": trim(@@(data,"$confirmacion"))
+            @"cupo_lleno": trim(@@(data,"$cupo_lleno"))
+            @"msjcorreo": trim(@@(data,"$msjcorreo"))
         }
     }
 
@@ -228,7 +210,7 @@ module "Temas de contenido:topic"
         if isanyword(@@(params,"$_operation"),"create,update")
         {
             if isnull(data) { ref data:record.create() }
-            if contains_all_words(error,"Save Error,Duplicate entry") { error = "Entrada duplicada, ya existe un tema con el mismo `ID`." }
+            if contains_all_words(error,"Save Error,Duplicate entry") { error = "Entrada duplicada, ya existe un registro con los mismos valores." }
 
             ref FormData = record.copy(data,"*")
             do record.clear(data)
@@ -244,10 +226,10 @@ module "Temas de contenido:topic"
         do rise_error(code,error)
     }
 
-    point @list to topic.list
-    point @read to topic.read
-    point @blank to topic.blank
-    point @create to topic.create
-    point @update to topic.update
-    point @delete to topic.delete
+    point @list to leadpass.list
+    point @read to leadpass.read
+    point @blank to leadpass.blank
+    point @create to leadpass.create
+    point @update to leadpass.update
+    point @delete to leadpass.delete
 }

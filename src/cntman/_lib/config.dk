@@ -7,6 +7,6 @@ module "Variables globales"
 	
 	@default_max_rows = 250
 
-	@URL_SEARCH_TOPIC = "/!/cntman/topic/?ik=true&search=@search"
+	@URL_SEARCH_TOPIC = "/!/cntman/topic/?only-list=true&search=@search"
 	@URL_SEARCH_CURSO = "/!/cntman/cursoscap/?only-list=true&search=@search"
 }

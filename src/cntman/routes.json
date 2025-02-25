@@ -25,6 +25,10 @@
             {
                 "route": "/temascap/",
                 "entity_type": "cnt_curso_tema"
+            },
+            {
+                "route": "/leadpass/",
+                "entity_type": "cnt_leadpass"
             }
         ]
     }

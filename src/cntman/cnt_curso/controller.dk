@@ -1,0 +1,25 @@
+#include "dkli.dkh"
+#!
+module "CursoController"
+{
+    point @list to curso.list
+    point @read to curso.read
+    point @blank to curso.blank
+    point @create to curso.create
+    point @update to curso.update
+    point @delete to curso.delete
+
+    switch @@(@http_context,"$request/get/_act")
+    {
+        case "delete-thumbnail"
+        {
+            point @delete to curso.DeleteThumbnail
+            break
+        }
+        case "delete-cover"
+        {
+            point @delete to curso.DeleteCover
+            break
+        }
+    }
+}

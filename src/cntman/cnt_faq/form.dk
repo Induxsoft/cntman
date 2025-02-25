@@ -72,7 +72,7 @@ module "form.dk"
                 {
                     div(class="col-12") {
                         label(class="form-label fw-bolder" "for"="ik_topic"){$"Tema:"}
-                        "input-key"(name="topic" id="ik_topic" "data-key"="sys_pk" "data-search"="id" "data-text"="title" "data-source"="#<@URL_SEARCH_TOPIC>" "data-value"="#<to.json(topic)>" columns="id,title,private" colcaptions="ID,Título,Privado" required="true"){$""}
+                        "input-key"(name="topic" id="ik_topic" "data-key"="sys_pk" "data-search"="id" "data-text"="title" "data-source"="#<@URL_SEARCH_TOPIC>&faqs=true" "data-value"="#<to.json(topic)>" columns="id,title,private" colcaptions="ID,Título,Privado" required="true"){$""}
                     }
                     div(class="col-12") {
                         label(class="form-label" "for"="title"){$"Título:"}

@@ -6,6 +6,7 @@ var cursoscap = {
     url_exit:"",
     currindex: -1,
     curritem: null,
+    _params:{},
 
     init()
     {
@@ -19,8 +20,12 @@ var cursoscap = {
         const btn_del_mini = document.getElementById("btn-del-mini");
         const btn_upl_port = document.getElementById("btn-upl-port");
         const btn_del_port = document.getElementById("btn-del-port");
-        const miniatura = document.getElementById("miniatura");
-        const portada = document.getElementById("portada");
+        const miniatura = document.getElementById("-miniatura");
+        const miniprev = document.getElementById("mini-prev");
+        const minitext = document.getElementById("mini-caption");
+        const portada = document.getElementById("-portada");
+        const portprev = document.getElementById("port-prev");
+        const porttext = document.getElementById("port-caption");
         const btn_up = document.getElementById("btn-up");
         const btn_down = document.getElementById("btn-down");
         const btn_add = document.getElementById("btn-add");
@@ -31,40 +36,44 @@ var cursoscap = {
         const mdl_tema = document.getElementById("modal-tema");
 
         btn_submit.addEventListener("click", (e) => this.submit());
+        btn_del_mini.addEventListener("click", (e) => this.DeleteThumbnail());
+        btn_del_port.addEventListener("click", (e) => this.DeleteCover());
         miniatura.addEventListener("change", (event) => {
-            const miniprev = document.getElementById("mini-prev");
-            const caption = document.getElementById("mini-caption");
             const file = event.target.files[0];
 
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                if (!reader.onload) reader.onload = function(e) {
                     miniprev.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
-                caption.textContent = file.name;
+                minitext.textContent = file.name;
+                this.ff["miniatura"].value = file.name;
             }
             else {
                 miniprev.src = "#";
-                caption.textContent = "";
+                minitext.textContent = "";
+                this.ff["miniatura"].value = "";
+                this.ff["-miniatura"].value = "";
             }
         });
         portada.addEventListener("change", (event) => {
-            const portprev = document.getElementById("port-prev");
-            const caption = document.getElementById("port-caption");
             const file = event.target.files[0];
 
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                if (!reader.onload) reader.onload = function(e) {
                     portprev.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
-                caption.textContent = file.name;
+                porttext.textContent = file.name;
+                this.ff["portada"].value = file.name;
             }
             else {
                 portprev.src = "#";
-                caption.textContent = "";
+                porttext.textContent = "";
+                this.ff["portada"].value = "";
+                this.ff["-portada"].value = "";
             }
         });
         btn_up.addEventListener("click", (e) => this.UpRow());
@@ -338,4 +347,74 @@ var cursoscap = {
         catch (error) { console.error(error) }
         finally { this.requesting = false; }
     },
+
+    DeleteThumbnail()
+    {
+        if (this.requesting || !confirm("¿Esta seguro que desea eliminar la miniatura del curso?")) return;
+
+        const miniprev = document.getElementById("mini-prev");
+        const minitext = document.getElementById("mini-caption");
+
+        try {
+            if (this._params?._entity_id == "_new")
+            {
+                miniprev.src = "#";
+                minitext.textContent = "";
+                this.ff["miniatura"].value = "";
+                this.ff["-miniatura"].value = "";
+            }
+            else
+            {
+                this.requesting = true;
+                let endpoint = `/!/cntman/cursoscap/${this._params?._entity_id}/?_act=delete-thumbnail`;
+                
+                InduxsoftCrudlModel.InvokeService(endpoint, null,
+                    (data) => {
+                        miniprev.src = "#";
+                        minitext.textContent = "";
+                        this.ff["miniatura"].value = "";
+                        this.ff["-miniatura"].value = "";
+                    },
+                    (error) => { alert(error.message ?? JSON.stringify(error)); },
+                "DELETE", false, false);
+            }
+        }
+        catch (error) { console.error(error) }
+        finally { this.requesting = false; }
+    },
+
+    DeleteCover()
+    {
+        if (this.requesting || !confirm("¿Esta seguro que desea eliminar la portada del curso?")) return;
+
+        const portprev = document.getElementById("port-prev");
+        const porttext = document.getElementById("port-caption");
+
+        try {
+            if (this._params?._entity_id == "_new")
+            {
+                portprev.src = "#";
+                porttext.textContent = "";
+                this.ff["portada"].value = "";
+                this.ff["-portada"].value = "";
+            }
+            else
+            {
+                this.requesting = true;
+                let endpoint = `/!/cntman/cursoscap/${this._params?._entity_id}/?_act=delete-cover`;
+                
+                InduxsoftCrudlModel.InvokeService(endpoint, null,
+                    (data) => {
+                        portprev.src = "#";
+                        porttext.textContent = "";
+                        this.ff["portada"].value = "";
+                        this.ff["-portada"].value = "";
+                    },
+                    (error) => { alert(error.message ?? JSON.stringify(error)); },
+                "DELETE", false, false);
+            }
+        }
+        catch (error) { console.error(error) }
+        finally { this.requesting = false; }
+    }
 }

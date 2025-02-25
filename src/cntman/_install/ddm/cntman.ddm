@@ -3,6 +3,14 @@ model "cntman"
 {
     #include "induxsoft.abstracts.ddm"
 
+    //* ======================================== [ DEPENDENCIAS (FK) ]
+    wide compatibility
+
+    entity "ut_icontact" : "TableModel" {}
+    
+    //* ======================================== [ ENTIDADES PRINCIPALES ]
+    strict compatibility
+
     entity "cnt_topic" : "TableModel"
     {
         @"id" string(32) unique required // Un identificador único para el tópico
@@ -57,6 +65,8 @@ model "cntman"
         @"objetivo" memo
         @"audiencia" memo
         @"descripcion" memo
+        @"miniatura" string(255)
+        @"portada" string(255)
     }
 
     entity "cnt_ruta_det" : "TableModel"
@@ -100,5 +110,34 @@ model "cntman"
         @"contenido" memo
         @"url_video" string(1024)
         @"duracion" int //En minutos
+    }
+
+    entity "cnt_leadpass" : "TableModel"
+    {
+        @"titulo" string(100) required
+        @"desde" datetime
+        @"hasta" datetime
+        @"contenido" memo
+        @"cupo" int //Cantidad de inscripciones máxima
+        @"stat_vistas" int //Cantidad de veces que se ha mostrado
+        @"stat_vistas_uq" int //Cantidad de veces únicas que se ha mostrado
+        @"confirmacion" memo //Contenido a mostrar para indicar que debe revisar su correo
+        @"cupo_lleno" memo //Mensaje a mostrar si el cupo ya se completó
+        @"msjcorreo" memo //Contenido del mensaje de correo electrónico a enviar (donde @guid_pass para la guid del evento y @guid_lead para le guid del lead, se reemplaza por la URL de confirmación)
+    }
+
+    entity "cnt_leadpass_det" : "TableModel"
+    {
+        @"pass" ref:"cnt_leadpass" required
+        @"lead" ref:"ut_icontact" required
+        @"confirmado" datetime
+        @"ult_vista" datetime
+        @"aceptado" bool
+        
+        index "cnt_leadpass_det1" unique
+        {
+            field "pass"
+            field "lead"
+        }
     }
 }

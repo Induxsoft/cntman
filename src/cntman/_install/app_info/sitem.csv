@@ -30,3 +30,8 @@ TE60,Temas de capacitación,cntman.temascap
 TE61,Crear tema de capacitación,cntman.temascap
 TE62,Editar tema de capacitación,cntman.temascap
 TE63,Eliminar tema de capacitación,cntman.temascap
+cntman.leadpass,Gestión de contenido restringido por registro,cntman
+TE70,Gestión de contenido restringido,cntman.leadpass
+TE71,Crear contenido restringido,cntman.leadpass
+TE72,Editar contenido restringido,cntman.leadpass
+TE73,Eliminar contenido restringido,cntman.leadpass

@@ -79,6 +79,16 @@ module "Cursos de capacitación :curso"
         }
     }
 
+    function setImagesPaths(&db)
+    {
+        @dbr.attachment.custom_path = dbr.vars.get(db,"cntman.cursoscap.image.path")
+        @dbr.attachment.custom_url = dbr.vars.get(db,"cntman.cursoscap.image.url")
+        @dbr.attachment.custom_mini = "/$/webshell/img/minis/"
+        
+        if @dbr.attachment.custom_path == "" { @dbr.attachment.custom_path = "data/@qname/cntman/cnt_curso/@id/" }
+        if @dbr.attachment.custom_url == "" { @dbr.attachment.custom_url = "/$/data/@qname/cntman/cnt_curso/@id/" }
+    }
+
     function prepareView(&db,&params,&data)
     {
         //#region prepareView()
@@ -105,6 +115,14 @@ module "Cursos de capacitación :curso"
 
         data<"tags*"> : dbr.list(db,"select tagname from cnt_tag where not ifnull(sys_deleted,0) order by tagname asc",@null)
         data<"detail*"> : _detalle
+        
+        if not(isnew)
+        {
+            do setImagesPaths(db)
+
+            data<"imgpath"> : dbr.attachment.path(@@(data,"&entity"))
+            data<"imgurl"> : dbr.attachment.url(@@(data,"&entity"))
+        }
     }
 
     function list(&db,&params)
@@ -167,7 +185,7 @@ module "Cursos de capacitación :curso"
         ref curso = validateFields(data)
         ref entity = entity.create(db,params,curso)
 
-        do saveimg(db,params,entity)
+        do SaveAttachments(db,params,entity)
         do dbr.apps.action.pos(entity)
         do dbr.commit(db)
         do dbr.apps.action.ext(entity)
@@ -182,9 +200,6 @@ module "Cursos de capacitación :curso"
         //#region update()
         @use_transaction = @false
         @just_read_entity = @true
-
-        ref files = ifnull(@@(@http_context,"&request/files"),list.create())
-        do rise_error(0,to.json(files))
         
         do dbr.apps.action.pre("TE52")
         do dbr.begin(db)
@@ -192,7 +207,7 @@ module "Cursos de capacitación :curso"
         ref curso = validateFields(data)
         ref entity = entity.update(db,params,curso)
 
-        do saveimg(db,params,entity)
+        do SaveAttachments(db,params,entity)
         do dbr.apps.action.pos(entity)
         do dbr.commit(db)
         do dbr.apps.action.ext(entity)
@@ -331,9 +346,59 @@ module "Cursos de capacitación :curso"
         return curso
     }
 
-    function saveimg(&db,&params,&data)
+    function SaveAttachments(&db,&params,&data)
     {
-        //#region saveimg
+        //#region SaveAttachments
+        do setImagesPaths(db)
+        params.id := @@(data,"$id")
+
+        return dbr.attachment.upload(params)
+    }
+
+    function DeleteThumbnail(&db,&params)
+    {
+        //#region DeleteThumbnail
+        @use_transaction = @false
+
+        ref entity = entity.read(db,params)
+        params.id := @@(entity,"$id")
+        params.filename := @@(entity,"$miniatura")
+        entity.miniatura := ""
+
+        do dbr.begin(db)
+        
+        do setImagesPaths(db)
+        do dbr.attachment.delete(params)
+        do dbr.execute(db,ftext("update #<@table_name> set miniatura='' where #<@keyfield> = @_entity_id"),params)
+        
+        do dbr.commit(db)
+        
+        return entity
+
+        exception{ do catch(db,params,@null) }
+    }
+
+    function DeleteCover(&db,&params)
+    {
+        //#region DeleteCover
+        @use_transaction = @false
+
+        ref entity = entity.read(db,params)
+        params.id := @@(entity,"$id")
+        params.filename := @@(entity,"$portada")
+        entity.portada := ""
+
+        do dbr.begin(db)
+        
+        do setImagesPaths(db)
+        do dbr.attachment.delete(params)
+        do dbr.execute(db,ftext("update #<@table_name> set portada='' where #<@keyfield> = @_entity_id"),params)
+        
+        do dbr.commit(db)
+        
+        return entity
+
+        exception{ do catch(db,params,@null) }
     }
 
     catch::&db,&params,&data
@@ -348,7 +413,7 @@ module "Cursos de capacitación :curso"
         if isanyword(@@(params,"$_operation"),"create,update")
         {
             if isnull(data) { ref data:record.create() }
-            if contains(error,"Duplicate entry") { error = "Entrada duplicada, ya existe un registro con los mismos valores." }
+            if contains_all_words(error,"Save Error,Duplicate entry") { error = "Entrada duplicada, ya existe un curso con el mismo `ID`." }
 
             ref FormData = record.copy(data,"*")
             do record.clear(data)
@@ -356,15 +421,11 @@ module "Cursos de capacitación :curso"
             
             do prepareView(db,params,data)
         }
+        if contains_all_words(error,"DELETE Error,CONSTRAINT,FOREIGN KEY,REFERENCES") {
+            error = "No es posible eliminar el registro, otros registros son dependientes del elemento seleccionado."
+        }
         
         do clear_exceptions()
         do rise_error(code,error)
     }
-
-    point @list to curso.list
-    point @read to curso.read
-    point @blank to curso.blank
-    point @create to curso.create
-    point @update to curso.update
-    point @delete to curso.delete
 }

@@ -33,6 +33,16 @@ module "form.dk"
     tag4 = fd('tag4','tx',entity)
     tag5 = fd('tag5','tx',entity)
 
+    mini_src = "#"
+    port_src = "#"
+    miniatura = @@(entity,"$miniatura")
+    portada = @@(entity,"$portada")
+
+    if not(@is_new) {
+        mini_src = path.concat(@("$./imgurl"),miniatura)
+        port_src = path.concat(@("$./imgurl"),portada)
+    }
+
     function print_buttons()
     {
         btn_cls = "btn btn-sm border-secondary induxsoft-corners btn-main-action"
@@ -119,33 +129,35 @@ module "form.dk"
                             }
                             div(class="col-12")
                             {
-                                input(class="d-none" type="file" name="miniatura" id="miniatura" accept=".jpg,.jpeg,.png")
-                                input(class="d-none" type="file" name="portada" id="portada" accept=".jpg,.jpeg,.png")
+                                input(type="hidden" name="miniatura" value="#<miniatura>" id="miniatura")
+                                input(type="hidden" name="portada" value="#<portada>" id="portada")
 
                                 div(class="d-flex gap-2 my-2" id="preview-gallery")
                                 {
                                     div(class="gallery-item border rounded"){
                                         div(class="d-flex gap-1 align-items-center justify-content-end bg-light")
                                         {
-                                            label(class="btn btn-gallery" "for"="miniatura" id="btn-upl-mini"){$"#<@ICON_UPLOAD>"}
+                                            input(class="d-none" type="file" name="-miniatura" id="-miniatura" accept=".jpg,.jpeg,.png")
+                                            label(class="btn btn-gallery" "for"="-miniatura" id="btn-upl-mini"){$"#<@ICON_UPLOAD>"}
                                             button(class="btn btn-gallery" type="button" id="btn-del-mini"){$"#<@ICON_TRASH>"}
                                         }
                                         figure(class="figure")
                                         {
-                                            img(class="figure-img img-fluid rounded" src="#" alt="Miniatura" id="mini-prev"){""}
-                                            figcaption(class="figure-caption" id="mini-caption"){""}
+                                            img(class="figure-img img-fluid rounded" src="#<mini_src>" alt="Miniatura" id="mini-prev"){""}
+                                            figcaption(class="figure-caption" id="mini-caption"){"#<miniatura>"}
                                         }
                                     }
                                     div(class="gallery-item border rounded"){
                                         div(class="d-flex gap-1 align-items-center justify-content-end bg-light")
                                         {
-                                            label(class="btn btn-gallery" "for"="portada" id="btn-upl-port"){$"#<@ICON_UPLOAD>"}
+                                            input(class="d-none" type="file" name="-portada" id="-portada" accept=".jpg,.jpeg,.png")
+                                            label(class="btn btn-gallery" "for"="-portada" id="btn-upl-port"){$"#<@ICON_UPLOAD>"}
                                             button(class="btn btn-gallery" type="button" id="btn-del-port"){$"#<@ICON_TRASH>"}
                                         }
                                         figure(class="figure")
                                         {
-                                            img(class="figure-img img-fluid rounded" src="#" alt="Portada" id="port-prev"){""}
-                                            figcaption(class="figure-caption" id="port-caption"){""}
+                                            img(class="figure-img img-fluid rounded" src="#<port_src>" alt="Portada" id="port-prev"){""}
+                                            figcaption(class="figure-caption" id="port-caption"){"#<portada>"}
                                         }
                                     }
                                 }
@@ -289,8 +301,8 @@ module "form.dk"
                                 }
                                 div(class="col-12")
                                 {
-                                    label(class="form-label" "for"="tema-url"){$"Hipervínculo:"}
-                                    input(class="form-control form-control-sm rounded-0" type="url" name="url_video" value="" id="tema-url" maxlength="1024" spellcheck="false" placeholder="https://...")
+                                    label(class="form-label" "for"="tema-url"){$"Video incrustado (Hipervínculo):"}
+                                    textarea(class="form-control rounded-0" name="url_video" id="tema-url" maxlength="1024" spellcheck="false"){$""}
                                 }
                                 div(class="col-auto")
                                 {
@@ -321,6 +333,7 @@ module "form.dk"
                         cursoscap.formid = "#<form_id>";
                         cursoscap.stackid = "#<stack_id>";
                         cursoscap.tableid = "#<table_id>";
+                        cursoscap._params = #<to.json(@("&parameters"))>;
                         cursoscap.init();
 
                         // Script injection
