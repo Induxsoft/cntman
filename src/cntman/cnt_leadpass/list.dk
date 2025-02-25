@@ -37,12 +37,12 @@ module "list.dk"
             }
             member @"stat_vistas"
             {
-                @"caption":"Mostrado"
+                @"caption":"Vistas"
                 @"align":"end"
             }
             member @"stat_vistas_uq"
             {
-                @"caption":"Vistas"
+                @"caption":"Confirmados"
                 @"align":"end"
             }
         }

@@ -281,6 +281,7 @@ var cursoscap = {
 
         let isnew = (fields["id"].value == "");
         let index = this.table.CurrentRowIndex();
+        let column = this.table.CurrentColIndex();
         let array = this.table?.DataArray ?? [];
         let data = this.tableData();
         let item = data.find(obj => obj.sys_guid == fields["id"].value) ?? {};
@@ -305,6 +306,7 @@ var cursoscap = {
 
         array[index] = item;
         this.table.UpdateRow(index);
+        this.table.NavTo(index,column);
         tools.hideModal("modal-tema");
     },
 

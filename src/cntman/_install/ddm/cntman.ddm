@@ -108,7 +108,7 @@ model "cntman"
         @"objetivo" memo
         @"descripcion" memo
         @"contenido" memo
-        @"url_video" string(1024)
+        @"url_video" memo
         @"duracion" int //En minutos
     }
 

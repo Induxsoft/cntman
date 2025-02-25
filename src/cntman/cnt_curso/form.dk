@@ -261,7 +261,7 @@ module "form.dk"
                 input(type="hidden" name="tags" value="" id="tags")
             }
 
-            div(class="modal fade" id="modal-tema" tabindex="-1" "data-bs-backdrop"="false") // "aria-hidden"="true"
+            div(class="modal fade" id="modal-tema" tabindex="-1" "data-bs-backdrop"="false" "aria-bs-hidden"="true" "aria-hidden"="true")
             {
                 div(class="modal-dialog modal-lg modal-dialog-scrollable") // modal-dialog-centered
                 {
