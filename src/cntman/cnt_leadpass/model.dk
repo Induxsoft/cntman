@@ -18,10 +18,6 @@ module "Gestión de contenido restringido :leadpass"
         titulo,
         IFNULL(DATE_FORMAT(desde,'%Y-%m-%d %H:%i'),'') desde,
         IFNULL(DATE_FORMAT(hasta,'%Y-%m-%d %H:%i'),'') hasta,
-        IFNULL(contenido,'') contenido,
-        IFNULL(confirmacion,'') confirmacion,
-        IFNULL(cupo_lleno,'') cupo_lleno,
-        IFNULL(msjcorreo,'') msjcorreo,
         IFNULL(cupo,0) cupo,
         IFNULL(stat_vistas,0) stat_vistas,
         IFNULL(stat_vistas_uq,0) stat_vistas_uq
@@ -38,11 +34,14 @@ module "Gestión de contenido restringido :leadpass"
         titulo,
         IFNULL(DATE_FORMAT(desde,'%Y-%m-%d %H:%i'),'') desde,
         IFNULL(DATE_FORMAT(hasta,'%Y-%m-%d %H:%i'),'') hasta,
+        IFNULL(DATE_FORMAT(fevento,'%Y-%m-%d %H:%i'),'') fevento,
+        IFNULL(cupo,0) cupo,
+        IFNULL(descripcion,'') descripcion,
         IFNULL(contenido,'') contenido,
         IFNULL(confirmacion,'') confirmacion,
         IFNULL(cupo_lleno,'') cupo_lleno,
         IFNULL(msjcorreo,'') msjcorreo,
-        IFNULL(cupo,0) cupo,
+        IFNULL(url,'') url,
         IFNULL(stat_vistas,0) stat_vistas,
         IFNULL(stat_vistas_uq,0) stat_vistas_uq
     FROM #<@table_name>
@@ -187,14 +186,16 @@ module "Gestión de contenido restringido :leadpass"
         if titulo == "" { do rise_error(511,"El valor de `Título` es requerido.") }
         if @@(data,"$desde") == "" { do field.remove(data,"desde") }
         if @@(data,"$hasta") == "" { do field.remove(data,"hasta") }
+        if @@(data,"$fevento") == "" { do field.remove(data,"fevento") }
         
         using data
         {
             @"titulo": titulo
-            @"contenido": trim(@@(data,"$contenido"))
-            @"confirmacion": trim(@@(data,"$confirmacion"))
-            @"cupo_lleno": trim(@@(data,"$cupo_lleno"))
-            @"msjcorreo": trim(@@(data,"$msjcorreo"))
+            @"descripcion": HtmlEncode(trim(@@(data,"$descripcion")))
+            @"contenido": HtmlEncode(trim(@@(data,"$contenido")))
+            @"confirmacion": HtmlEncode(trim(@@(data,"$confirmacion")))
+            @"cupo_lleno": HtmlEncode(trim(@@(data,"$cupo_lleno")))
+            @"msjcorreo": HtmlEncode(trim(@@(data,"$msjcorreo")))
         }
     }
 

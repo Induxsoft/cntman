@@ -77,42 +77,57 @@ module "form.dk"
                     div(class="col-12")
                     {
                         label(class="form-label" "for"="titulo"){$"Título:"}
-                        input(class="form-control rounded-0" type="text" name="titulo" value="#<fd('titulo','tx',entity)>" id="titulo" maxlength="100" spellcheck="true" required="")
+                        input(class="form-control form-control-sm rounded-0" type="text" name="titulo" value="#<fd('titulo','tx',entity)>" id="titulo" maxlength="100" spellcheck="true" required="")
                     }
-                    div(class="col-6 col-sm-5 col-md-4")
+                    div(class="col-12")
+                    {
+                        label(class="form-label" "for"="descripcion"){$"Descripción"}
+                        textarea(class="form-control form-control-sm rounded-0" name="descripcion" id="descripcion" rows="3" spellcheck="true"){$"#<fd('descripcion','tx',entity)>"}
+                    }
+                    div(class="col-6 col-md-3")
                     {
                         label(class="form-label" "for"="desde"){$"Desde:"}
-                        input(class="form-control rounded-0" type="datetime-local" name="desde" value="#<fd('desde','dtm',entity)>" id="desde")
+                        input(class="form-control form-control-sm rounded-0" type="datetime-local" name="desde" value="#<fd('desde','dtm',entity)>" id="desde")
                     }
-                    div(class="col-6 col-sm-5 col-md-4")
+                    div(class="col-6 col-md-3")
                     {
                         label(class="form-label" "for"="hasta"){$"Hasta:"}
-                        input(class="form-control rounded-0" type="datetime-local" name="hasta" value="#<fd('hasta','dtm',entity)>" id="hasta")
+                        input(class="form-control form-control-sm rounded-0" type="datetime-local" name="hasta" value="#<fd('hasta','dtm',entity)>" id="hasta")
                     }
-                    div(class="col-sm-2 col-md-4")
+                    div(class="col-6 col-md-3")
+                    {
+                        label(class="form-label" "for"="fevento"){$"Fecha del evento:"}
+                        input(class="form-control form-control-sm rounded-0" type="datetime-local" name="fevento" value="#<fd('fevento','dtm',entity)>" id="fevento")
+                    }
+                    div(class="col-6 col-md-3")
                     {
                         label(class="form-label" "for"="cupo"){$"Cupo:"}
-                        input(class="form-control rounded-0 text-end" type="number" name="cupo" value="#<fd('cupo','nm',entity)>" id="cupo")
+                        input(class="form-control form-control-sm rounded-0 text-end" type="number" name="cupo" value="#<fd('cupo','nm',entity)>" id="cupo")
                     }
                     div(class="col-12")
                     {
                         label(class="form-label" "for"="contenido"){$"Contenido"}
-                        textarea(class="form-control rounded-0" name="contenido" id="contenido" rows="3" spellcheck="true"){$"#<fd('contenido','tx',entity)>"}
+                        textarea(class="form-control form-control-sm rounded-0" name="contenido" id="contenido" rows="3" spellcheck="true"){$"#<fd('contenido','tx',entity)>"}
                     }
                     div(class="col-12" title="Contenido a mostrar para indicar que debe revisar su correo")
                     {
                         label(class="form-label" "for"="confirmacion"){$"Confirmacion"}
-                        textarea(class="form-control rounded-0" name="confirmacion" id="confirmacion" rows="3" spellcheck="true"){$"#<fd('confirmacion','tx',entity)>"}
+                        textarea(class="form-control form-control-sm rounded-0" name="confirmacion" id="confirmacion" rows="3" spellcheck="true"){$"#<fd('confirmacion','tx',entity)>"}
                     }
                     div(class="col-12" title="Mensaje a mostrar si el cupo ya se completó")
                     {
                         label(class="form-label" "for"="cupo_lleno"){$"Cupo lleno"}
-                        textarea(class="form-control rounded-0" name="cupo_lleno" id="cupo_lleno" rows="3" spellcheck="true"){$"#<fd('cupo_lleno','tx',entity)>"}
+                        textarea(class="form-control form-control-sm rounded-0" name="cupo_lleno" id="cupo_lleno" rows="3" spellcheck="true"){$"#<fd('cupo_lleno','tx',entity)>"}
                     }
                     div(class="col-12" title="Contenido del mensaje de correo electrónico a enviar")
                     {
                         label(class="form-label" "for"="msjcorreo"){$"Cuerpo del correo"}
-                        textarea(class="form-control rounded-0" name="msjcorreo" id="msjcorreo" rows="3" spellcheck="true"){$"#<fd('msjcorreo','tx',entity)>"}
+                        textarea(class="form-control form-control-sm rounded-0" name="msjcorreo" id="msjcorreo" rows="3" spellcheck="true"){$"#<fd('msjcorreo','tx',entity)>"}
+                    }
+                    div(class="col-12")
+                    {
+                        label(class="form-label" "for"="url"){$"URL de registro:"}
+                        input(class="form-control form-control-sm rounded-0" type="url" name="url" value="#<fd('url','tx',entity)>" id="url" maxlength="1024" spellcheck="false")
                     }
                 }
             }
