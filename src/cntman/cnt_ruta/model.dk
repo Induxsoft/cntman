@@ -1,8 +1,8 @@
 #include "dkli.dkh"
 #!
-module "Cursos de capacitación :curso"
+module "Rutas de capacitación :ruta"
 {
-    @table_name = "cnt_curso" // params._entities_type
+    @table_name = "cnt_ruta" // params._entities_type
     @keyfield = "sys_pk" // params._key
     // @create_fields = "*"
     // @update_fields = "*"
@@ -13,18 +13,15 @@ module "Cursos de capacitación :curso"
 
     @list_query = "
     SELECT
-        c.sys_pk,
-        c.sys_guid,
-        t.title AS tema,
-        c.id,
-        c.titulo,
-        REPLACE(CONCAT_WS('; ', c.tag1,c.tag2,c.tag3,c.tag4,c.tag5),' ;','') tags
-    FROM #<@table_name> c
-        LEFT JOIN cnt_topic t ON c.topic = t.sys_pk
-    WHERE NOT IFNULL(c.sys_deleted,0)
-        AND IF(IFNULL(@topic,'*')='*', TRUE, c.topic = @topic)
-        AND IF(IFNULL(@search,'')='', TRUE, (c.id = @search OR c.titulo LIKE CONCAT('%',@search,'%') OR CONCAT_WS(';', c.tag1,c.tag2,c.tag3,c.tag4,c.tag5) LIKE CONCAT('%',@search,'%')))
-    ORDER BY c.id
+        sys_pk,
+        sys_guid,
+        id,
+        titulo,
+        IFNULL(descripcion,'') descripcion
+    FROM #<@table_name>
+    WHERE NOT IFNULL(sys_deleted,0)
+        AND IF(IFNULL(@search,'')='', TRUE, (id = @search OR titulo LIKE CONCAT('%',@search,'%')))
+    ORDER BY id
     LIMIT #<@default_max_rows>
     "
     @read_query = "
@@ -34,37 +31,31 @@ module "Cursos de capacitación :curso"
         sys_user,
         sys_lastuser,
         sys_recver,
-        topic,
         id,
         titulo,
-        IFNULL(req_auth,0) req_auth,
+        IFNULL(descripcion,'') descripcion,
         IFNULL(objetivo,'') objetivo,
         IFNULL(audiencia,'') audiencia,
-        IFNULL(descripcion,'') descripcion,
-        IFNULL(contenido,'') contenido,
         IFNULL(miniatura,'') miniatura,
-        IFNULL(portada,'') portada,
-        REPLACE(CONCAT_WS('; ', tag1,tag2,tag3,tag4,tag5),' ;','') tags
+        IFNULL(portada,'') portada
     FROM #<@table_name>
     WHERE #<@keyfield> = @_entity_id
     LIMIT 1
     "
     @childs_query = "
     SELECT
-        t.sys_pk,
-        t.sys_guid,
-        t.sys_recver,
-        IFNULL(t.orden,0) orden,
-        t.titulo,
-        IFNULL(t.objetivo,'') objetivo,
-        IFNULL(t.descripcion,'') descripcion,
-        IFNULL(t.contenido,'') contenido,
-        IFNULL(t.url_video,'') url_video,
-        IFNULL(t.duracion,0) duracion,
-        CONCAT(IFNULL(t.duracion,0),' min') minutos
-    FROM cnt_curso_tema t
-    WHERE t.curso = COALESCE(@_entity_id,@icurso,@sys_pk)
-    ORDER BY t.orden
+        d.sys_pk,
+        d.sys_guid,
+        d.sys_recver,
+        d.orden,
+        d.ruta,
+        d.curso,
+        c.id,
+        c.titulo
+    FROM cnt_ruta_det d
+        INNER JOIN cnt_curso c ON d.curso = c.sys_pk
+    WHERE d.ruta = COALESCE(@_entity_id,@iruta,@sys_pk)
+    ORDER BY d.orden
     "
 
     function setPrintTitles(&db,&data)
@@ -83,12 +74,12 @@ module "Cursos de capacitación :curso"
 
     function setImagesPaths(&db)
     {
-        @dbr.attachment.custom_path = dbr.vars.get(db,"cntman.cursoscap.image.path")
-        @dbr.attachment.custom_url = dbr.vars.get(db,"cntman.cursoscap.image.url")
+        @dbr.attachment.custom_path = dbr.vars.get(db,"cntman.rutascap.image.path")
+        @dbr.attachment.custom_url = dbr.vars.get(db,"cntman.rutascap.image.url")
         @dbr.attachment.custom_mini = "/$/webshell/img/minis/"
         
-        if @dbr.attachment.custom_path == "" { @dbr.attachment.custom_path = "data/@qname/cntman/cnt_curso/@id/" }
-        if @dbr.attachment.custom_url == "" { @dbr.attachment.custom_url = "/$/data/@qname/cntman/cnt_curso/@id/" }
+        if @dbr.attachment.custom_path == "" { @dbr.attachment.custom_path = "data/@qname/cntman/cnt_ruta/@id/" }
+        if @dbr.attachment.custom_url == "" { @dbr.attachment.custom_url = "/$/data/@qname/cntman/cnt_ruta/@id/" }
     }
 
     function prepareView(&db,&params,&data)
@@ -98,11 +89,8 @@ module "Cursos de capacitación :curso"
 
         ref _detalle = @null
         
-        if field.exist(data,"form") { params<"topic"> : @@(data,"#form/topic") }
-        else if field.exist(data,"entity")
+        if field.exist(data,"entity")
         {
-            params<"topic"> : @@(data,"#entity/topic")
-
             t = field.typeof(data,"entity/_detalle")
             if t == 1 { ref _detalle:from.json(@@(data,"$entity/_detalle")) }
             if t == 3 { ref _detalle:@@(data,"&entity/_detalle") }
@@ -110,12 +98,6 @@ module "Cursos de capacitación :curso"
         }
 
         if isnull(_detalle) && not(isnew) { ref _detalle:dbr.list(db,@childs_query,params) }
-        if @@(params,"#topic") > 0 {
-            sql = "select sys_pk, id, title, if(private,'Sí','No') private from cnt_topic where sys_pk = @topic"
-            data<"topic*"> : dbr.rec(db,sql,params)
-        }
-
-        data<"tags*"> : dbr.list(db,"select tagname from cnt_tag where not ifnull(sys_deleted,0) order by tagname asc",@null)
         data<"detail*"> : _detalle
         
         if not(isnew)
@@ -130,16 +112,15 @@ module "Cursos de capacitación :curso"
     function list(&db,&params)
     {
         //#region list()
-        do dbr.apps.action.grant("TE50")
+        do dbr.apps.action.grant("TE40")
 
         ref lista = entity.list(db,params)
         if parse.bool(@@(params,"$only-list")) { return lista }
         new data
         {
             @"data*": lista
-            @"itemactions*": dbr.apps.itemactions(db,"DET0A7","action","",0)
-            @"itemreports*": dbr.apps.itemactions(db,"DET0A7","report","",0)
-            @"topics*": dbr.list(db,"select sys_pk, title from cnt_topic where not ifnull(sys_deleted,0)",@null)
+            @"itemactions*": dbr.apps.itemactions(db,"DET0A6","action","",0)
+            @"itemreports*": dbr.apps.itemactions(db,"DET0A6","report","",0)
         }
         do setPrintTitles(db,data)
         
@@ -151,7 +132,7 @@ module "Cursos de capacitación :curso"
     function read(&db,&params)
     {
         //#region read()
-        do dbr.apps.action.grant("TE50")
+        do dbr.apps.action.grant("TE40")
 
         if not(isset("@just_read_entity")) { @just_read_entity = @false }
         if @just_read_entity { return entity.read(db,params) }
@@ -166,7 +147,7 @@ module "Cursos de capacitación :curso"
     function blank(&db,&params)
     {
         //#region blank()
-        do dbr.apps.action.grant("TE50")
+        do dbr.apps.action.grant("TE40")
         
         new data {}
         do prepareView(db,params,data)
@@ -181,11 +162,11 @@ module "Cursos de capacitación :curso"
         @use_transaction = @false
         @just_read_entity = @true
         
-        do dbr.apps.action.pre("TE51")
+        do dbr.apps.action.pre("TE41")
         do dbr.begin(db)
 
-        ref curso = validateFields(data)
-        ref entity = entity.create(db,params,curso)
+        ref ruta = validateFields(data)
+        ref entity = entity.create(db,params,ruta)
 
         do SaveAttachments(db,params,entity)
         do dbr.apps.action.pos(entity)
@@ -203,11 +184,11 @@ module "Cursos de capacitación :curso"
         @use_transaction = @false
         @just_read_entity = @true
         
-        do dbr.apps.action.pre("TE52")
+        do dbr.apps.action.pre("TE42")
         do dbr.begin(db)
 
-        ref curso = validateFields(data)
-        ref entity = entity.update(db,params,curso)
+        ref ruta = validateFields(data)
+        ref entity = entity.update(db,params,ruta)
 
         do SaveAttachments(db,params,entity)
         do dbr.apps.action.pos(entity)
@@ -224,7 +205,7 @@ module "Cursos de capacitación :curso"
         //#region delete()
         @use_transaction = @false
         
-        do dbr.apps.action.pre("TE53")
+        do dbr.apps.action.pre("TE43")
 
         ref entity = entity.read(db,params)
         deleted = @false
@@ -233,7 +214,7 @@ module "Cursos de capacitación :curso"
         {
             do dbr.begin(db)
 
-            do dbr.delete(db,"cnt_curso_tema","curso=@_entity_id",params)
+            do dbr.delete(db,"cnt_ruta_det","ruta=@_entity_id",params)
             ref entity:entity.delete(db,params)
 
             do dbr.apps.action.pos(entity)
@@ -285,50 +266,29 @@ module "Cursos de capacitación :curso"
         id = trim(@@(data,"$id"))
         titulo = trim(@@(data,"$titulo"))
 
-        if @@(data,"#topic") < 1 { do field.remove(data,"topic") }
         if id == "" { do rise_error(511,"El valor de `ID` es requerido.") }
         if titulo == "" { do rise_error(512,"El valor de `Título` es requerido.") }
-        
-        ref tags = from.json(field.dstr(data,"tags","[]"))
-        tags_length = list.count(tags)
 
-        if tags_length < 1 { do rise_error(513,"Es necesario indicar al menos una etiqueta.") }
-        if tags_length > 5 { do rise_error(514,"Solo es posible seleccionar un máximo de 5 etiquetas.") }
+        ref ruta = record.copy(data,"*")
+        do field.remove(ruta,"_detalle")
 
-        ref curso = record.copy(data,"*")
-        do field.remove(curso,"tags")
-        do field.remove(curso,"_detalle")
-
-        for i = 0; i < 5
-        {
-            field = "tag"+str(i+1)
-            curso<field> : list.str(tags,i)
-            exception
-            {
-                do pop_exception()
-                curso<field> : ""
-            }
-        }
-
-        using curso
+        using ruta
         {
             @"sys_user": @@(@http_context, "$session/user/uid")
             @"sys_lastuser": @@(@http_context, "$session/user/uid")
             @"id": id
             @"titulo": titulo
-            @"req_auth": parse.bool(@@(data,"$req_auth"))
             @"objetivo": HtmlEncode(trim(@@(data,"$objetivo")))
             @"audiencia": HtmlEncode(trim(@@(data,"$audiencia")))
             @"descripcion": HtmlEncode(trim(@@(data,"$descripcion")))
-            @"contenido": HtmlEncode(trim(@@(data,"$contenido")))
         }
 
         if field.exist(data,"_detalle") {
-            fields = "orden,titulo,objetivo,descripcion,contenido,url_video,duracion"
+            fields = "orden,curso"
 
             t = field.typeof(data,"_detalle")
-            if t == 1 { curso<"_detalle*"> : from.json(@@(data,"$_detalle")) }
-            if t == 3 { curso<"_detalle*"> : @@(data,"&_detalle") }
+            if t == 1 { ruta<"_detalle*"> : from.json(@@(data,"$_detalle")) }
+            if t == 3 { ruta<"_detalle*"> : @@(data,"&_detalle") }
 
             if not(isnew) { fields = fields + ",sys_pk,sys_recver" }
 
@@ -336,16 +296,16 @@ module "Cursos de capacitación :curso"
             {
                 member "_detalle"
                 {
-                    @"joinfield": "curso"
+                    @"joinfield": "ruta"
                     @"keyfield": "sys_pk"
-                    @"table": "cnt_curso_tema"
+                    @"table": "cnt_ruta_det"
                     @"select_query": @childs_query
                     @"fields": fields
                 }
             }
         }
 
-        return curso
+        return ruta
     }
 
     function SaveAttachments(&db,&params,&data)
@@ -415,7 +375,7 @@ module "Cursos de capacitación :curso"
         if isanyword(@@(params,"$_operation"),"create,update")
         {
             if isnull(data) { ref data:record.create() }
-            if contains_all_words(error,"Save Error,Duplicate entry") { error = "Entrada duplicada, ya existe un curso con el mismo `ID`." }
+            if contains_all_words(error,"Save Error,Duplicate entry") { error = "Entrada duplicada, ya existe un ruta con el mismo `ID`." }
 
             ref FormData = record.copy(data,"*")
             do record.clear(data)

@@ -1,0 +1,25 @@
+#include "dkli.dkh"
+#!
+module "RutaController"
+{
+    point @list to ruta.list
+    point @read to ruta.read
+    point @blank to ruta.blank
+    point @create to ruta.create
+    point @update to ruta.update
+    point @delete to ruta.delete
+
+    switch @@(@http_context,"$request/get/_act")
+    {
+        case "delete-thumbnail"
+        {
+            point @delete to ruta.DeleteThumbnail
+            break
+        }
+        case "delete-cover"
+        {
+            point @delete to ruta.DeleteCover
+            break
+        }
+    }
+}

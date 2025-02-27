@@ -15,8 +15,6 @@ module "form.dk"
     do @context.begin(@crud_context)
 
     ref entity = ifnull(@("&./entity"),record.create())
-    ref topic = ifnull(@("&./topic"),record.create())
-    ref tags = ifnull(@("&./tags"),list.create())
     ref detail = ifnull(@("&./detail"),list.create())
 
 	@_entities_type = @("$parameters/_entities_type")
@@ -24,14 +22,8 @@ module "form.dk"
 	@is_new = (@_entity_id == "_new")
 
     form_id = "frm_"+@_entities_type
-    stack_id = "stk_temas"
-    table_id = "tbl_temas"
-    
-    tag1 = fd('tag1','tx',entity)
-    tag2 = fd('tag2','tx',entity)
-    tag3 = fd('tag3','tx',entity)
-    tag4 = fd('tag4','tx',entity)
-    tag5 = fd('tag5','tx',entity)
+    stack_id = "stk_cursos"
+    table_id = "tbl_cursos"
 
     mini_src = "#"
     port_src = "#"
@@ -52,6 +44,8 @@ module "form.dk"
     }
     "
 
+    do AutoFillRows(detail,10)
+
     function print_buttons()
     {
         btn_cls = "btn btn-sm border-secondary induxsoft-corners btn-main-action"
@@ -62,7 +56,7 @@ module "form.dk"
     point @buttons to print_buttons
     new nav_config
     {
-        @"title": ifstr(@is_new, "Crear", "Editar") +" "+ " curso"
+        @"title": ifstr(@is_new, "Crear", "Editar") +" "+ " ruta"
         @"urlexit": "../"
         @"buttons*": @buttons
         member @"hidden"
@@ -101,11 +95,6 @@ module "form.dk"
                     {
                         div(class="row gx-2 bg-white mt-2 mx-2 ms-md-2 my-md-2 px-1 py-2")
                         {
-                            div(class="col-12")
-                            {
-                                label(class="form-label fw-bolder" "for"="ik_topic"){$"Tema de contenido:"}
-                                InputKey(name="topic" id="ik_topic" "data-key"="sys_pk" "data-search"="id" "data-text"="title" "data-source"="#<@URL_SEARCH_TOPIC>" "data-value"="#<to.json(topic)>" columns="id,title,private" colcaptions="ID,Título,Privado" required="true" "control-styles"="#<ik_sm_style>"){$""}
-                            }
                             div(class="col-4")
                             {
                                 label(class="form-label" "for"="id"){$"ID:"}
@@ -118,16 +107,8 @@ module "form.dk"
                             }
                             div(class="col-12")
                             {
-                                div(class="form-check")
-                                {
-                                    input(class="form-check-input" type="checkbox" name="req_auth" id="req_auth" "#<fd('req_auth','ch',entity)>"="")
-                                    label(class="form-check-label" "for"="req_auth"){$"Requiere inicio de sesión"}
-                                }
-                            }
-                            div(class="col-12")
-                            {
-                                label(class="form-label" "for"="objetivo"){$"Objetivo:"}
-                                textarea(class="form-control form-control-sm rounded-0" name="objetivo" id="objetivo" spellcheck="true"){$"#<fd('objetivo','tx',entity)>"}
+                                label(class="form-label" "for"="descripcion"){$"Descripción:"}
+                                textarea(class="form-control form-control-sm rounded-0" name="descripcion" id="descripcion" spellcheck="true"){$"#<fd('descripcion','tx',entity)>"}
                             }
                             div(class="col-12")
                             {
@@ -136,13 +117,8 @@ module "form.dk"
                             }
                             div(class="col-12")
                             {
-                                label(class="form-label" "for"="descripcion"){$"Descripción:"}
-                                textarea(class="form-control form-control-sm rounded-0" name="descripcion" id="descripcion" spellcheck="true"){$"#<fd('descripcion','tx',entity)>"}
-                            }
-                            div(class="col-12")
-                            {
-                                label(class="form-label" "for"="contenido"){$"Contenido:"}
-                                textarea(class="form-control form-control-sm rounded-0" name="contenido" id="contenido" spellcheck="true"){$"#<fd('contenido','tx',entity)>"}
+                                label(class="form-label" "for"="objetivo"){$"Objetivo:"}
+                                textarea(class="form-control form-control-sm rounded-0" name="objetivo" id="objetivo" spellcheck="true"){$"#<fd('objetivo','tx',entity)>"}
                             }
                             div(class="col-12")
                             {
@@ -179,70 +155,29 @@ module "form.dk"
                                     }
                                 }
                             }
-                            div(class="col-12")
-                            {
-                                label(class="form-label fw-bolder" "for"=""){$"Etiquetas:"}
-                                fieldset(class="d-flex flex-wrap overflow-auto border gap-2 p-2" id="tags_container" style="max-height:250px;")
-                                {
-                                    #!
-                                    etiquetas = trim(fd("tags","tx",entity))
-                                    for i = 0; i < list.count(tags)
-                                    {
-                                        tagname = @@(list.obj(tags,i), "$tagname")
-                                        name = "tag"+str(i+1)
-                                        id = "chk_"+name
-                                        checked = ifstr(contains(etiquetas,tagname), "checked", "")
-
-                                        #$
-                                        div(class="form-check") {
-                                            input(class="form-check-input" type="checkbox" value="#<tagname>" id="#<id>" "#<checked>"="")
-                                            label(class="form-check-label" "for"="#<id>"){"#<tagname>"}
-                                        }
-                                    }
-                                    #$
-                                }
-                            }
                         }
                     }
                     div(class="col-md-6 mb-2 ps-md-0")
                     {
                         div(class="bg-white mx-2 ms-md-0 my-md-2 p-2")
                         {
-                            h5(class=""){"Temas de capacitación"}
+                            h5(class=""){"Cursos de capacitación"}
 
                             div(class="d-flex gap-2 mb-2")
                             {
                                 button(class="btn btn-sm btn-light border" type="button" id="btn-up"){$"Subir &UpArrow;"}
                                 button(class="btn btn-sm btn-light border" type="button" id="btn-down"){$"Bajar &DownArrow;"}
-                                button(class="btn btn-sm btn-light border" type="button" id="btn-add" "data-bs-toggle"="modal" "data-bs-target"="#modal-tema"){$"Crear"}
-                                button(class="btn btn-sm btn-light border" type="button" id="btn-edt"){$"Editar"}
+                                button(class="btn btn-sm btn-light border" type="button" id="btn-add"){$"Agregar"}
+                                // button(class="btn btn-sm btn-light border" type="button" id="btn-edt"){$"Editar"}
                                 button(class="btn btn-sm btn-light border" type="button" id="btn-del"){$"Eliminar"}
                             }
-
-                            /* StackEdit(
-                                id="#<stack_id>"
-                                data="#<to.json(detail)>"
-                                title="titulo"
-                                subtitle="url_video"
-                                "caption-c"="minutos"
-                                "caption-d"="orden"
-                                "control-styles"="
-                                    #_stackContainer {
-                                        flex-direction:column;
-                                        background-color:transparent;
-                                    }
-                                    .container-item {
-                                        width:100%;
-                                    }
-                                "
-                            ){""} */
 
                             /* div(class="d-flex align-items-center flex-wrap border gap-1 px-2" id="tbl_act_bar")
                             {
                                 div(class="" id="act_bar_text"){small(class="text-muted"){""}}
                                 div(class="flex-grow-1 text-end" id="act_bar_cont"){$""}
                             } */
-                            div(class="border border-top-0" id="div_tbl_temas" style="display:flex;width:auto;min-width:100%;")
+                            div(class="border border-top-0" id="div_tbl_cursos" style="display:flex;width:auto;min-width:100%;")
                             {
                                 EditTable(id="#<table_id>" data="#<to.json(detail)>" style="width:100%;"
                                 "auto-confirm"="true"
@@ -272,8 +207,8 @@ module "form.dk"
                                         "edit-tr"
                                         {
                                             "edit-th"(type="NoEditable" field="orden" textalign="center"){$"#"}
-                                            "edit-th"(type="Text" field="titulo" maxlength="150" width="100%"){$"Título"}
-                                            "edit-th"(type="Number" field="duracion" format="true" textalign="end" sufix=" min"){$"Duración"}
+                                            "edit-th"(type="Text" field="id" maxlength="32" button="true"){$"ID"}
+                                            "edit-th"(type="Text" field="titulo" maxlength="150" button="true" width="100%"){$"Título"}
                                         }
                                     }
                                 }
@@ -281,66 +216,11 @@ module "form.dk"
                         }
                     }
                 }
-                input(type="hidden" name="tags" value="" id="tags")
             }
 
-            div(class="modal fade" id="modal-tema" tabindex="-1" "aria-labelledby"="modal-tema-title" "aria-hidden"="true" "data-bs-backdrop"="false")
+            div
             {
-                div(class="modal-dialog modal-lg modal-dialog-scrollable") // modal-dialog-centered
-                {
-                    div(class="modal-content rounded-0 p-0 border-0 shadow")
-                    {
-                        div(class="modal-header p-3")
-                        {
-                            h5(class="modal-title" id="modal-tema-title"){$"Tema"}
-                            button(class="btn-close btn-sm" type="button" "data-bs-dismiss"="modal" "aria-label"="Close"){$""}
-                        }
-                        div(class="modal-body row gx-2 p-4 bg-white")
-                        {
-                            form(class="row gx-2" action="#" method="POST" id="mdl-frm-tema")
-                            {
-                                input(class="d-none" type="text" name="id" value="" id="tema-id")
-                                input(class="d-none" type="text" name="orden" value="" id="tema-orden")
-
-                                div(class="col-12")
-                                {
-                                    label(class="form-label" "for"="tema-titulo"){$"Título:"}
-                                    input(class="form-control form-control-sm rounded-0" type="text" name="titulo" value="" id="tema-titulo" maxlength="150" spellcheck="true" required="")
-                                }
-                                div(class="col-12")
-                                {
-                                    label(class="form-label" "for"="tema-objetivo"){$"Objetivo:"}
-                                    textarea(class="form-control rounded-0" name="objetivo" id="tema-objetivo" spellcheck="true"){$""}
-                                }
-                                div(class="col-12")
-                                {
-                                    label(class="form-label" "for"="tema-descripcion"){$"Descripción:"}
-                                    textarea(class="form-control rounded-0" name="descripcion" id="tema-descripcion" spellcheck="true"){$""}
-                                }
-                                div(class="col-12")
-                                {
-                                    label(class="form-label" "for"="tema-contenido"){$"Contenido:"}
-                                    textarea(class="form-control rounded-0" name="contenido" id="tema-contenido" spellcheck="true"){$""}
-                                }
-                                div(class="col-12")
-                                {
-                                    label(class="form-label" "for"="tema-url"){$"Video incrustado (Hipervínculo):"}
-                                    textarea(class="form-control rounded-0" name="url_video" id="tema-url" maxlength="1024" spellcheck="false"){$""}
-                                }
-                                div(class="col-auto")
-                                {
-                                    label(class="form-label" "for"="tema-duracion"){$"Duración (min):"}
-                                    input(class="form-control form-control-sm rounded-0" type="number" name="duracion" value="" id="tema-duracion" min="0" step="1")
-                                }
-                            }
-                        }
-                        div(class="modal-footer")
-                        {
-                            button(type="button" class="btn btn-sm btn-primary rounded-0" id="btn-tema-1"){$"Aceptar"}
-                            button(type="button" class="btn btn-sm btn-light rounded-0" id="btn-tema-0" "data-bs-dismiss"="modal"){$"Cancelar"}
-                        }
-                    }
-                }
+                InputKey(id="ik-curso" "data-key"="sys_pk" "data-search"="id" "data-text"="titulo" "data-source"="#<@URL_SEARCH_CURSO>" columns="id,titulo,tags" colcaptions="ID,Título,Etiquetas" "box-title-text"="Seleccione un curso de la lista" "hidden-input"="false" "control-styles"="#container{display:none !important;}"){$""}
             }
         }
         // Resúmenes y datos al pie
@@ -349,15 +229,15 @@ module "form.dk"
             //////////////////////////////////////////////////////////////////
             div(id="_custom_area")
             {
-                script(src="/$/cntman/js/cnt_curso.js"){$""}
+                script(src="/$/cntman/js/cnt_ruta.js"){$""}
                 script(type="text/javascript")
                 {$'
                     document.addEventListener("DOMContentLoaded", () => {
-                        cursoscap.formid = "#<form_id>";
-                        cursoscap.stackid = "#<stack_id>";
-                        cursoscap.tableid = "#<table_id>";
-                        cursoscap._params = #<to.json(@("&parameters"))>;
-                        cursoscap.init();
+                        rutascap.formid = "#<form_id>";
+                        rutascap.stackid = "#<stack_id>";
+                        rutascap.tableid = "#<table_id>";
+                        rutascap._params = #<to.json(@("&parameters"))>;
+                        rutascap.init();
 
                         // Script injection
                         #<@@(@crud_context,"script")>

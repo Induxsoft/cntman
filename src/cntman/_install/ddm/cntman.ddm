@@ -98,6 +98,7 @@ model "cntman"
         @"tag3" string(32)
         @"tag4" string(32)
         @"tag5" string(32)
+        @"req_auth" bool
     }
 
     entity "cnt_curso_tema" : "TableModel"
