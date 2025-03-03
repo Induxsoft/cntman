@@ -1,0 +1,25 @@
+#include "dkli.dkh"
+#!
+module "LeadpassController"
+{
+    point @list to leadpass.list
+    point @read to leadpass.read
+    point @blank to leadpass.blank
+    point @create to leadpass.create
+    point @update to leadpass.update
+    point @delete to leadpass.delete
+
+    switch @@(@http_context,"$request/get/_act")
+    {
+        case "delete-thumbnail"
+        {
+            point @delete to leadpass.DeleteThumbnail
+            break
+        }
+        case "delete-cover"
+        {
+            point @delete to leadpass.DeleteCover
+            break
+        }
+    }
+}

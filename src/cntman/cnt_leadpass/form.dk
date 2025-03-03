@@ -20,6 +20,16 @@ module "form.dk"
 
     form_id = "frm_"+@_entities_type
 
+    mini_src = "#"
+    port_src = "#"
+    miniatura = @@(entity,"$miniatura")
+    portada = @@(entity,"$portada")
+
+    if not(@is_new) {
+        mini_src = path.concat(@("$./imgurl"),miniatura)
+        port_src = path.concat(@("$./imgurl"),portada)
+    }
+
     function print_buttons()
     {
         btn_cls = "btn btn-sm border-secondary induxsoft-corners btn-main-action"
@@ -43,6 +53,7 @@ module "form.dk"
     #$
     div(class="container-lg" id="view")
     {
+        link(href="/$/cntman/css/cnt_curso.css" rel="stylesheet"){""}
         // Filtros y acciones
         section(id="top_area")
         {
@@ -82,7 +93,7 @@ module "form.dk"
                     div(class="col-12")
                     {
                         label(class="form-label" "for"="descripcion"){$"Descripción"}
-                        textarea(class="form-control form-control-sm rounded-0" name="descripcion" id="descripcion" rows="3" spellcheck="true"){$"#<fd('descripcion','tx',entity)>"}
+                        textarea(class="form-control form-control-sm rounded-0" name="descripcion" id="descripcion" spellcheck="true"){$"#<fd('descripcion','tx',entity)>"}
                     }
                     div(class="col-6 col-md-3")
                     {
@@ -107,27 +118,62 @@ module "form.dk"
                     div(class="col-12")
                     {
                         label(class="form-label" "for"="contenido"){$"Contenido"}
-                        textarea(class="form-control form-control-sm rounded-0" name="contenido" id="contenido" rows="3" spellcheck="true"){$"#<fd('contenido','tx',entity)>"}
+                        textarea(class="form-control form-control-sm rounded-0" name="contenido" id="contenido" spellcheck="true"){$"#<fd('contenido','tx',entity)>"}
                     }
                     div(class="col-12" title="Contenido a mostrar para indicar que debe revisar su correo")
                     {
                         label(class="form-label" "for"="confirmacion"){$"Confirmacion"}
-                        textarea(class="form-control form-control-sm rounded-0" name="confirmacion" id="confirmacion" rows="3" spellcheck="true"){$"#<fd('confirmacion','tx',entity)>"}
+                        textarea(class="form-control form-control-sm rounded-0" name="confirmacion" id="confirmacion" spellcheck="true"){$"#<fd('confirmacion','tx',entity)>"}
                     }
                     div(class="col-12" title="Mensaje a mostrar si el cupo ya se completó")
                     {
                         label(class="form-label" "for"="cupo_lleno"){$"Cupo lleno"}
-                        textarea(class="form-control form-control-sm rounded-0" name="cupo_lleno" id="cupo_lleno" rows="3" spellcheck="true"){$"#<fd('cupo_lleno','tx',entity)>"}
+                        textarea(class="form-control form-control-sm rounded-0" name="cupo_lleno" id="cupo_lleno" spellcheck="true"){$"#<fd('cupo_lleno','tx',entity)>"}
                     }
                     div(class="col-12" title="Contenido del mensaje de correo electrónico a enviar")
                     {
                         label(class="form-label" "for"="msjcorreo"){$"Cuerpo del correo"}
-                        textarea(class="form-control form-control-sm rounded-0" name="msjcorreo" id="msjcorreo" rows="3" spellcheck="true"){$"#<fd('msjcorreo','tx',entity)>"}
+                        textarea(class="form-control form-control-sm rounded-0" name="msjcorreo" id="msjcorreo" spellcheck="true"){$"#<fd('msjcorreo','tx',entity)>"}
                     }
                     div(class="col-12")
                     {
                         label(class="form-label" "for"="url"){$"URL de registro:"}
                         input(class="form-control form-control-sm rounded-0" type="url" name="url" value="#<fd('url','tx',entity)>" id="url" maxlength="1024" spellcheck="false")
+                    }
+                    div(class="col-12")
+                    {
+                        input(type="hidden" name="miniatura" value="#<miniatura>" id="miniatura")
+                        input(type="hidden" name="portada" value="#<portada>" id="portada")
+
+                        div(class="d-flex gap-2 my-2" id="preview-gallery")
+                        {
+                            div(class="gallery-item border rounded"){
+                                div(class="d-flex gap-1 align-items-center justify-content-end bg-light")
+                                {
+                                    input(class="d-none" type="file" name="-miniatura" id="-miniatura" accept=".jpg,.jpeg,.png")
+                                    label(class="btn btn-gallery" "for"="-miniatura" id="btn-upl-mini"){$"#<@ICON_UPLOAD>"}
+                                    button(class="btn btn-gallery" type="button" id="btn-del-mini"){$"#<@ICON_TRASH>"}
+                                }
+                                figure(class="figure")
+                                {
+                                    img(class="figure-img img-fluid rounded ratio ratio-16x9" src="#<mini_src>" alt="Miniatura" id="mini-prev"){""}
+                                    figcaption(class="figure-caption" id="mini-caption"){"#<miniatura>"}
+                                }
+                            }
+                            div(class="gallery-item border rounded"){
+                                div(class="d-flex gap-1 align-items-center justify-content-end bg-light")
+                                {
+                                    input(class="d-none" type="file" name="-portada" id="-portada" accept=".jpg,.jpeg,.png")
+                                    label(class="btn btn-gallery" "for"="-portada" id="btn-upl-port"){$"#<@ICON_UPLOAD>"}
+                                    button(class="btn btn-gallery" type="button" id="btn-del-port"){$"#<@ICON_TRASH>"}
+                                }
+                                figure(class="figure")
+                                {
+                                    img(class="figure-img img-fluid rounded ratio ratio-16x9" src="#<port_src>" alt="Portada" id="port-prev"){""}
+                                    figcaption(class="figure-caption" id="port-caption"){"#<portada>"}
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -138,12 +184,14 @@ module "form.dk"
             //////////////////////////////////////////////////////////////////
             div(id="_custom_area")
             {
-                // script(src=""){$""}
+                script(src="/$/cntman/js/cnt_leadpass.js"){$""}
                 script(type="text/javascript")
                 {$'
                     document.addEventListener("DOMContentLoaded", () => {
-                        const btn_submit = document.getElementById("btn-submit");
-                        btn_submit.addEventListener("click", () => InduxsoftCrudlModel.Submit("#<form_id>"));
+                        leadpass.formid = "#<form_id>";
+                        leadpass._params = #<to.json(@("&parameters"))>;
+                        leadpass.init();
+
                         // Script injection
                         #<@@(@crud_context,"script")>
                     });

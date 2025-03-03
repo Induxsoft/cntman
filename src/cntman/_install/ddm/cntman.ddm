@@ -128,6 +128,8 @@ model "cntman"
         @"cupo_lleno" memo //Mensaje a mostrar si el cupo ya se completó
         @"msjcorreo" memo //Contenido del mensaje de correo electrónico a enviar (donde @guid_pass para la guid del evento y @guid_lead para le guid del lead, se reemplaza por la URL de confirmación)
         @"url" string(1024)
+        @"miniatura" string(255)
+        @"portada" string(255)
     }
 
     entity "cnt_leadpass_det" : "TableModel"

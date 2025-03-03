@@ -47,6 +47,28 @@
                 "varinput": {
                     "control": "text"
                 }
+            },
+            {
+                "varname": "cntman.leadpass.image.path",
+                "vardefault": "",
+                "varvalue": "data/@qname/cntman/cnt_leadpass/@id/",
+                "varcaption": "Ruta física de imágenes",
+                "varhelp": "Ruta física de imágenes para los eventos (contenido restringido).",
+                "vartype": "string",
+                "varinput": {
+                    "control": "text"
+                }
+            },
+            {
+                "varname": "cntman.leadpass.image.url",
+                "vardefault": "",
+                "varvalue": "/$/data/@qname/cntman/cnt_leadpass/@id/",
+                "varcaption": "URL de imágenes",
+                "varhelp": "URL pública de imágenes para los eventos (contenido restringido).",
+                "vartype": "string",
+                "varinput": {
+                    "control": "text"
+                }
             }
         ]
     }

@@ -35,14 +35,19 @@ module "list.dk"
                 @"caption":"Cupo"
                 @"align":"end"
             }
-            member @"stat_vistas"
+            member @"aceptados"
             {
-                @"caption":"Vistas"
+                @"caption":"Aceptados"
                 @"align":"end"
             }
-            member @"stat_vistas_uq"
+            member @"confirmados"
             {
                 @"caption":"Confirmados"
+                @"align":"end"
+            }
+            member @"vistas"
+            {
+                @"caption":"Vistas"
                 @"align":"end"
             }
         }

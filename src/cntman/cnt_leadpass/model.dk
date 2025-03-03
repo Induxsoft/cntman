@@ -13,17 +13,18 @@ module "Gestión de contenido restringido :leadpass"
 
     @list_query = "
     SELECT
-        sys_pk,
-        sys_guid,
-        titulo,
-        IFNULL(DATE_FORMAT(desde,'%Y-%m-%d %H:%i'),'') desde,
-        IFNULL(DATE_FORMAT(hasta,'%Y-%m-%d %H:%i'),'') hasta,
-        IFNULL(cupo,0) cupo,
-        IFNULL(stat_vistas,0) stat_vistas,
-        IFNULL(stat_vistas_uq,0) stat_vistas_uq
-    FROM #<@table_name>
-    WHERE NOT IFNULL(sys_deleted,0)
-        AND IF(IFNULL(@search,'')='', TRUE, (titulo LIKE CONCAT('%',@search,'%')))
+        lp.sys_pk,
+        lp.sys_guid,
+        lp.titulo,
+        IFNULL(DATE_FORMAT(lp.desde,'%Y-%m-%d %H:%i'),'') desde,
+        IFNULL(DATE_FORMAT(lp.hasta,'%Y-%m-%d %H:%i'),'') hasta,
+        IFNULL(lp.cupo,0) cupo,
+        IFNULL(lp.stat_vistas,0) vistas,
+        IFNULL(lp.stat_vistas_uq,0) confirmados,
+        (select count(sys_pk) from cnt_leadpass_det where pass = lp.sys_pk and aceptado) aceptados
+    FROM #<@table_name> lp
+    WHERE NOT IFNULL(lp.sys_deleted,0)
+        AND IF(IFNULL(@search,'')='', TRUE, (lp.titulo LIKE CONCAT('%',@search,'%')))
     LIMIT #<@default_max_rows>
     "
     @read_query = "
@@ -42,6 +43,8 @@ module "Gestión de contenido restringido :leadpass"
         IFNULL(cupo_lleno,'') cupo_lleno,
         IFNULL(msjcorreo,'') msjcorreo,
         IFNULL(url,'') url,
+        IFNULL(miniatura,'') miniatura,
+        IFNULL(portada,'') portada,
         IFNULL(stat_vistas,0) stat_vistas,
         IFNULL(stat_vistas_uq,0) stat_vistas_uq
     FROM #<@table_name>
@@ -63,10 +66,29 @@ module "Gestión de contenido restringido :leadpass"
         }
     }
 
+    function setImagesPaths(&db)
+    {
+        @dbr.attachment.custom_path = dbr.vars.get(db,"cntman.leadpass.image.path")
+        @dbr.attachment.custom_url = dbr.vars.get(db,"cntman.leadpass.image.url")
+        @dbr.attachment.custom_mini = "/$/webshell/img/minis/"
+        
+        if @dbr.attachment.custom_path == "" { @dbr.attachment.custom_path = "data/@qname/cntman/cnt_leadpass/@id/" }
+        if @dbr.attachment.custom_url == "" { @dbr.attachment.custom_url = "/$/data/@qname/cntman/cnt_leadpass/@id/" }
+    }
+
     function prepareView(&db,&params,&data)
     {
         //#region prepareView()
         isnew = (@@(params,"$_entity_id") == "_new")
+
+        if not(isnew)
+        {
+            params.id := @@(data,"$entity/sys_guid")
+            do setImagesPaths(db)
+
+            data<"imgpath"> : dbr.attachment.path(params)
+            data<"imgurl"> : dbr.attachment.url(params)
+        }
 
         do setPrintTitles(db,data)
     }
@@ -129,6 +151,7 @@ module "Gestión de contenido restringido :leadpass"
         do validateFields(data)
         ref entity = entity.create(db,params,data)
 
+        do SaveAttachments(db,params,entity)
         do dbr.apps.action.pos(entity)
         do dbr.commit(db)
         do dbr.apps.action.ext(entity)
@@ -150,6 +173,7 @@ module "Gestión de contenido restringido :leadpass"
         do validateFields(data)
         ref entity = entity.update(db,params,data)
 
+        do SaveAttachments(db,params,entity)
         do dbr.apps.action.pos(entity)
         do dbr.commit(db)
         do dbr.apps.action.ext(entity)
@@ -199,6 +223,61 @@ module "Gestión de contenido restringido :leadpass"
         }
     }
 
+    function SaveAttachments(&db,&params,&data)
+    {
+        //#region SaveAttachments
+        do setImagesPaths(db)
+        params.id := @@(data,"$sys_guid")
+
+        return dbr.attachment.upload(params)
+    }
+
+    function DeleteThumbnail(&db,&params)
+    {
+        //#region DeleteThumbnail
+        @use_transaction = @false
+
+        ref entity = entity.read(db,params)
+        params.id := @@(entity,"$sys_guid")
+        params.filename := @@(entity,"$miniatura")
+        entity.miniatura := ""
+
+        do dbr.begin(db)
+        
+        do setImagesPaths(db)
+        do dbr.attachment.delete(params)
+        do dbr.execute(db,ftext("update #<@table_name> set miniatura='' where #<@keyfield> = @_entity_id"),params)
+        
+        do dbr.commit(db)
+        
+        return entity
+
+        exception{ do catch(db,params,@null) }
+    }
+
+    function DeleteCover(&db,&params)
+    {
+        //#region DeleteCover
+        @use_transaction = @false
+
+        ref entity = entity.read(db,params)
+        params.id := @@(entity,"$sys_guid")
+        params.filename := @@(entity,"$portada")
+        entity.portada := ""
+
+        do dbr.begin(db)
+        
+        do setImagesPaths(db)
+        do dbr.attachment.delete(params)
+        do dbr.execute(db,ftext("update #<@table_name> set portada='' where #<@keyfield> = @_entity_id"),params)
+        
+        do dbr.commit(db)
+        
+        return entity
+
+        exception{ do catch(db,params,@null) }
+    }
+
     catch::&db,&params,&data
     {
         //#region catch
@@ -226,11 +305,4 @@ module "Gestión de contenido restringido :leadpass"
         do clear_exceptions()
         do rise_error(code,error)
     }
-
-    point @list to leadpass.list
-    point @read to leadpass.read
-    point @blank to leadpass.blank
-    point @create to leadpass.create
-    point @update to leadpass.update
-    point @delete to leadpass.delete
 }
