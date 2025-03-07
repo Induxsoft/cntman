@@ -38,6 +38,7 @@ module "Cursos de capacitación :curso"
         id,
         titulo,
         IFNULL(req_auth,0) req_auth,
+        IFNULL(hidden,0) hidden,
         IFNULL(objetivo,'') objetivo,
         IFNULL(audiencia,'') audiencia,
         IFNULL(descripcion,'') descripcion,
@@ -317,6 +318,7 @@ module "Cursos de capacitación :curso"
             @"id": id
             @"titulo": titulo
             @"req_auth": parse.bool(@@(data,"$req_auth"))
+            @"hidden": parse.bool(@@(data,"$hidden"))
             @"objetivo": HtmlEncode(trim(@@(data,"$objetivo")))
             @"audiencia": HtmlEncode(trim(@@(data,"$audiencia")))
             @"descripcion": HtmlEncode(trim(@@(data,"$descripcion")))

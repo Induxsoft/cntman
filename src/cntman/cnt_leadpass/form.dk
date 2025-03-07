@@ -68,7 +68,7 @@ module "form.dk"
                 $"#<@('error/message')>"
                 button(type="button" class="btn-close" "data-bs-dismiss"="alert" "aria-label"="Close"){$""}
             }
-            form(method="POST" action="./" id="#<form_id>")
+            form(class="mx-1" method="POST" action="./" id="#<form_id>")
             {
                 input(type="hidden" name="sys_pk" value="#<@@(entity,'#sys_pk')>")
                 input(type="hidden" name="sys_recver" value="#<@@(entity,'#sys_recver')>")
@@ -90,11 +90,6 @@ module "form.dk"
                         label(class="form-label" "for"="titulo"){$"Título:"}
                         input(class="form-control form-control-sm rounded-0" type="text" name="titulo" value="#<fd('titulo','tx',entity)>" id="titulo" maxlength="100" spellcheck="true" required="")
                     }
-                    div(class="col-12")
-                    {
-                        label(class="form-label" "for"="descripcion"){$"Descripción"}
-                        textarea(class="form-control form-control-sm rounded-0" name="descripcion" id="descripcion" spellcheck="true"){$"#<fd('descripcion','tx',entity)>"}
-                    }
                     div(class="col-6 col-md-3")
                     {
                         label(class="form-label" "for"="desde"){$"Desde:"}
@@ -114,6 +109,19 @@ module "form.dk"
                     {
                         label(class="form-label" "for"="cupo"){$"Cupo:"}
                         input(class="form-control form-control-sm rounded-0 text-end" type="number" name="cupo" value="#<fd('cupo','nm',entity)>" id="cupo")
+                    }
+                    div(class="col-12 py-1")
+                    {
+                        div(class="form-check form-check-inline")
+                        {
+                            input(class="form-check-input" type="checkbox" name="hidden" id="hidden" "#<fd('hidden','ch',entity)>"="")
+                            label(class="form-check-label" "for"="hidden"){$"Ocultar"}
+                        }
+                    }
+                    div(class="col-12")
+                    {
+                        label(class="form-label" "for"="descripcion"){$"Descripción"}
+                        textarea(class="form-control form-control-sm rounded-0" name="descripcion" id="descripcion" spellcheck="true"){$"#<fd('descripcion','tx',entity)>"}
                     }
                     div(class="col-12")
                     {

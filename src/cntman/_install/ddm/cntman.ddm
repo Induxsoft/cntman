@@ -99,6 +99,7 @@ model "cntman"
         @"tag4" string(32)
         @"tag5" string(32)
         @"req_auth" bool
+        @"hidden" bool
     }
 
     entity "cnt_curso_tema" : "TableModel"
@@ -130,6 +131,7 @@ model "cntman"
         @"url" string(1024)
         @"miniatura" string(255)
         @"portada" string(255)
+        @"hidden" bool
     }
 
     entity "cnt_leadpass_det" : "TableModel"

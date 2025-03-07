@@ -37,6 +37,7 @@ module "Gestión de contenido restringido :leadpass"
         IFNULL(DATE_FORMAT(hasta,'%Y-%m-%d %H:%i'),'') hasta,
         IFNULL(DATE_FORMAT(fevento,'%Y-%m-%d %H:%i'),'') fevento,
         IFNULL(cupo,0) cupo,
+        IFNULL(hidden,0) hidden,
         IFNULL(descripcion,'') descripcion,
         IFNULL(contenido,'') contenido,
         IFNULL(confirmacion,'') confirmacion,
@@ -215,6 +216,7 @@ module "Gestión de contenido restringido :leadpass"
         using data
         {
             @"titulo": titulo
+            @"hidden": parse.bool(@@(data,"$hidden"))
             @"descripcion": HtmlEncode(trim(@@(data,"$descripcion")))
             @"contenido": HtmlEncode(trim(@@(data,"$contenido")))
             @"confirmacion": HtmlEncode(trim(@@(data,"$confirmacion")))
