@@ -1,6 +1,6 @@
 #include "dkli.dkh"
 #!
-module "list.dk"
+module "detail.dk"
 {
     #include "functions.dkh"
     #include "serialize.dkh"
@@ -14,59 +14,67 @@ module "list.dk"
 	@_entities_type = @("$parameters/_entities_type")
 	table_id = "tbl_"+@_entities_type
 
+    new fil_estados
+    {
+        @"datatable*": from.json('[
+            {"id":"registrado", "const":"Registrados"},
+            {"id":"confirmado", "const":"Confirmados"},
+            {"id":"aceptado", "const":"Aceptados"},
+            {"id":"rechazado", "const":"Rechazados"}
+        ]')
+        @"id": "fil_estados"
+        member "attributes"
+        {
+            @"class": "induxsoft-form-select"
+            @"name": "estado"
+            @"onchange": "filter(this);"
+        }
+        @"value_field": "id"
+        @"text_field": "const"
+        @"first_value": "*"
+        @"first_text": "(Todos los estados)"
+        @"selected": @("$parameters/estado")
+    }
+
     new table_definition
     {
         @"datatable*":data
+        @"tableheight":"96%"
         member @"columns"
         {
-            member @"titulo" { @"caption":"Título" }
-            member @"desde"
+            member @"uf_nombre" { @"caption":"Nombre" }
+            member @"uf_email" { @"caption":"Correo" }
+            member @"uf_telefono" { @"caption":"Teléfono" }
+            member @"estado"
             {
-                @"caption":"Desde"
+                @"caption":"Estado"
                 @"align":"center"
             }
-            member @"hasta"
+            member @"fregistro"
             {
-                @"caption":"Hasta"
+                @"caption":"F. Registro"
                 @"align":"center"
             }
-            member @"cupo"
+            member @"fconfirmacion"
             {
-                @"caption":"Cupo"
-                @"align":"end"
-            }
-            member @"registrados"
-            {
-                @"caption":"Registrados"
-                @"align":"end"
-            }
-            member @"confirmados"
-            {
-                @"caption":"Confirmados"
-                @"align":"end"
-            }
-            member @"aceptados"
-            {
-                @"caption":"Aceptados"
-                @"align":"end"
-            }
-            member @"vistas"
-            {
-                @"caption":"Vistas"
-                @"align":"end"
+                @"caption":"F. Confirmación"
+                @"align":"center"
             }
         }
-        @"table_footer":"Mostrando los primeros # registros"
+        @"table_footer":"Mostrando los # leads registrados"
     }
 
     new nav_config
     {
-        @"title": "Gestión de contenido restringido"
-        @"urlexit": "/"
-        @"main": "TE71,TE72,TE73,TE74"
-        @"actions*": ifnull(@("&./itemactions"),list.create())
-        @"reports*": ifnull(@("&./itemreports"),list.create())
-        @"jscurrentcontext": "getCurrentContext"
+        @"title": "[Detalles] "+@("$./titulo")
+        @"urlexit": "/!/cntman/leadpass/"
+        // @"actions*": ifnull(@("&./itemactions"),list.create())
+        // @"reports*": ifnull(@("&./itemreports"),list.create())
+        // @"jscurrentcontext": "getCurrentContext"
+        member @"hidden"
+        {
+            @"send": @true
+        }
     }
     // Encapsula a la vista en su totalidad, todo lo que hay antes o después no se considera 
     #$
@@ -81,15 +89,25 @@ module "list.dk"
 
             form(class="mb-1" action="./" method="GET" id="form-filter")
             {
-                "filter-text"(
-                    "id"="fil_text"
-                    "text-field"="search"
-                    "placeholder"="Buscar ..."
-                    "form"="#form-filter"
-                    "value"="#<@('$parameters/search')>"
-                    "auto-submit"="true"
-                    "class"="w-100"
-                ){$""}
+                div(class="d-flex align-items-center gap-2 flex-wrap w-100 py-1")
+                {
+                    div(class="d-flex gap-2")
+                    {
+                        div{ #! do uie.dbSelect(fil_estados) } #$
+                    }
+                    div(class="flex-grow-1")
+                    {
+                        "filter-text"(
+                            "class"="w-100"
+                            "id"="fil_text"
+                            "text-field"="search"
+                            "placeholder"="Buscar ..."
+                            "form"="#form-filter"
+                            "value"="#<@('$parameters/search')>"
+                            "auto-submit"="true"
+                        ){$""}
+                    }
+                }
             }
         }
         // Contenido principal
@@ -110,7 +128,7 @@ module "list.dk"
                     }
                     div(class="col-6 text-center")
                     {
-                        h4(class=""){$"Contenido restringido por registro"}
+                        h4(class=""){$""}
                     }
                     div(class="col-3 text-end")
                     {
@@ -136,6 +154,8 @@ module "list.dk"
                 // script(src=""){$""}
                 script(type="text/javascript")
                 {$'
+                    function filter(el) { el.form.submit(); }
+
                     function getCurrentContext() {
                         const table = document.getElementById("#<table_id>");
                         const id = (table?.DataArray[table.CurrentRowIndex()]?.sys_pk ?? "");

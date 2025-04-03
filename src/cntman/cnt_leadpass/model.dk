@@ -19,9 +19,10 @@ module "Gestión de contenido restringido :leadpass"
         IFNULL(DATE_FORMAT(lp.desde,'%Y-%m-%d %H:%i'),'') desde,
         IFNULL(DATE_FORMAT(lp.hasta,'%Y-%m-%d %H:%i'),'') hasta,
         IFNULL(lp.cupo,0) cupo,
-        IFNULL(lp.stat_vistas,0) vistas,
+        (select count(sys_pk) from cnt_leadpass_det where pass = lp.sys_pk) as registrados,
         IFNULL(lp.stat_vistas_uq,0) confirmados,
-        (select count(sys_pk) from cnt_leadpass_det where pass = lp.sys_pk and aceptado) aceptados
+        (select count(sys_pk) from cnt_leadpass_det where pass = lp.sys_pk and aceptado) aceptados,
+        IFNULL(lp.stat_vistas,0) vistas
     FROM #<@table_name> lp
     WHERE NOT IFNULL(lp.sys_deleted,0)
         AND IF(IFNULL(@search,'')='', TRUE, (lp.titulo LIKE CONCAT('%',@search,'%')))
@@ -123,6 +124,53 @@ module "Gestión de contenido restringido :leadpass"
 
         new data { @"entity*": entity.read(db,params) }
         do prepareView(db,params,data)
+        return data
+
+        exception{ do catch(db,params,@null) }
+    }
+
+    function detail(&db,&params)
+    {
+        //#region detail()
+        do dbr.apps.action.grant("TE74")
+
+        sql = "
+        SELECT
+            uc.uf_nombre,
+            uc.uf_email,
+            uc.uf_telefono,
+            (CASE
+                WHEN (d.aceptado IS NULL AND d.confirmado IS NULL) THEN 'Registrado'
+                WHEN (d.aceptado IS NULL AND d.confirmado IS NOT NULL) THEN 'Confirmado'
+                WHEN (IFNULL(d.aceptado,0)=1 AND d.confirmado IS NOT NULL) THEN 'Aceptado'
+                WHEN (IFNULL(d.aceptado,0)=0 AND d.confirmado IS NOT NULL) THEN 'Rechazado'
+                ELSE ''
+            END) AS estado,
+            DATE_FORMAT(d.sys_dtcreated,'%Y-%m-%d %H:%i') AS fregistro,
+            IFNULL(DATE_FORMAT(d.confirmado,'%Y-%m-%d %H:%i'),'') AS fconfirmacion
+        FROM cnt_leadpass_det d
+            INNER JOIN cnt_leadpass lp ON d.pass = lp.sys_pk
+            INNER JOIN ut_icontact uc ON d.lead = uc.sys_pk
+        WHERE d.pass = @_entity_id
+            AND (
+                CASE IFNULL(@estado,'*')
+                    WHEN 'registrado' THEN (d.aceptado IS NULL AND d.confirmado IS NULL)
+                    WHEN 'confirmado' THEN (d.aceptado IS NULL AND d.confirmado IS NOT NULL)
+                    WHEN 'aceptado' THEN (IFNULL(d.aceptado,0)=1 AND d.confirmado IS NOT NULL)
+                    WHEN 'rechazado' THEN (IFNULL(d.aceptado,0)=0 AND d.confirmado IS NOT NULL)
+                    ELSE TRUE
+                END
+            )
+            AND IF(IFNULL(@search,'')='', TRUE, (CONCAT_WS(' ',uc.uf_nombre,uc.uf_email,uc.uf_telefono) LIKE CONCAT('%',@search,'%')))
+        "
+
+        new data
+        {
+            @"titulo": dbr.str(db,ftext("select titulo from cnt_leadpass where #<@keyfield> = @_entity_id"),params)
+            @"data*": dbr.list(db,sql,params)
+        }
+        do setPrintTitles(db,data)
+
         return data
 
         exception{ do catch(db,params,@null) }

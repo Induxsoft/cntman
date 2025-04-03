@@ -34,3 +34,4 @@ TE70,Gestión de contenido restringido,Leadpass,,/!/cntman/leadpass/,0,cntman.le
 TE71,Crear contenido restringido,Crear,,/!/cntman/leadpass/_new/,0,cntman.leadpass,DET0A9,0,action
 TE72,Editar contenido restringido,Editar,,/!/cntman/leadpass/@_src_context_item_id/,0,cntman.leadpass,DET0A9,1,action
 TE73,Eliminar contenido restringido,Eliminar,,"javascript:InduxsoftCrudlModel.Delete(`@_src_context_item_id`);",0,cntman.leadpass,DET0A9,1,action
+TE74,Consultar contenido restringido,Detalles,,/!/cntman/leadpass/@_src_context_item_id/detail/,0,cntman.leadpass,DET0A9,1,action

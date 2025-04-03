@@ -9,6 +9,16 @@ module "LeadpassController"
     point @update to leadpass.update
     point @delete to leadpass.delete
 
+    switch @@(@http_context,"$request/get/_view")
+    {
+        case "detail"
+        {
+            @form_view = "detail.dk"
+            point @read to leadpass.detail
+            break
+        }
+    }
+
     switch @@(@http_context,"$request/get/_act")
     {
         case "delete-thumbnail"
