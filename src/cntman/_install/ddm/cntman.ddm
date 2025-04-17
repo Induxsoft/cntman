@@ -148,4 +148,55 @@ model "cntman"
             field "lead"
         }
     }
+    entity "cnt_post_status" : "EnumModel"
+    {
+        // 0-Borrador, el post solo pueden verlo los administradores y editarlo el autor
+        // 1-Privado, el post solo puede ser visible a través de un visor que explícitamente muestre contenido privado
+        // 2-Público, el Post puede ser visto por cualquiera
+    }
+    entity "cnt_post" : "TableModel"
+    {
+
+    // Principal
+        @"topic" ref: "cnt_topic" required
+        @"title" string(255) required
+        @"frmt_content" memo //Contenido formateado (Html o MD)
+        @"post_status" ref:"cnt_post_status" required
+        @"cover" string(512) //Url de imagen de portada
+    // Etiquetas
+        @"tag1" string(32) required
+        @"tag2" string(32)
+        @"tag3" string(32)
+        @"tag4" string(32)
+        @"tag5" string(32)
+    // SEO
+        @"description" memo //Descripción usada también en listas o búsquedas
+        @"keywords" memo
+        @"url" string(512)
+        @"og-image" string(512)
+        @"og-type" string(32)
+        @"x-domain" string(64)
+        @"x-image" string(512)
+        @"x-type" string(32)
+
+    //Avanzados
+        @"mini_cover" string(512) //Url de miniatura del post
+        @"sign" string(255) //Firma del autor
+        @"pass" string(32) // MD5 de una contraseña requerida para mostrar el artículo
+        @"pub_dt" datetime //Fecha y hora de publicación, si es null, es inmediato
+        
+    // Control interno (No editables ni visibles)
+        @"blog" ref:"cnt_blog" required //Blog al que pertenece la entrada
+        @"flat_content" memo // Contenido en texto plano
+        @"format" string(3) // htm=html | md=markdown
+        @"viewcount" int // Cantidad de veces que se ha mostrado.
+        @"rank" decimal(2,1) // Calificación del contenido 1-5 estrellas.
+        @"rankcount" int // Cantidad de usuarios que han calificado.
+    }
+    entity "cnt_blog" : "TableModel"
+    {
+        @"id" string(32) unique required
+        @"title" string(150) required
+        @"description" memo
+    }
 }

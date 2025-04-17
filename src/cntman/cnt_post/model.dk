@@ -1,0 +1,391 @@
+#include "dkli.dkh"
+#!
+module ":post"
+{
+    @table_name = "cnt_post" // params._entities_type
+    @keyfield = "sys_pk" // params._key
+    // @create_fields = "*"
+    // @update_fields = "*"
+    // @create_exclude_fields = ""
+    @update_exclude_fields = "sys_pk,sys_guid,sys_dtcreated,sys_user"
+    // @create_alias_fields = ""
+    // @update_alias_fields = ""
+
+    @list_query = "
+    SELECT
+        q.sys_pk,
+        q.title,
+        REPLACE(CONCAT_WS('; ', q.tag1,q.tag2,q.tag3,q.tag4,q.tag5),' ;','') tags,
+        ps.const estado,
+        date_format(pub_dt,'%Y-%m-%d %H:%i:%s')str_pub_dt
+    FROM #<@table_name> q
+        INNER JOIN cnt_topic t ON t.sys_pk = q.topic
+        INNER JOIN cnt_post_status ps ON q.post_status=ps.id
+    WHERE NOT IFNULL(q.sys_deleted,0)
+        AND q.blog=@blog
+        AND IF(IFNULL(@fil_topic,'*')='*', TRUE, q.topic = @fil_topic)
+        AND IF(IFNULL(@fil_text,'')='', TRUE, (q.title LIKE CONCAT('%',@fil_text,'%') OR CONCAT_WS(';', q.tag1,q.tag2,q.tag3,q.tag4,q.tag5) LIKE CONCAT('%',@fil_text,'%')))
+    LIMIT #<@default_max_rows>
+    "
+    @read_query = "
+    SELECT
+        *,
+        date_format(pub_dt,'%Y-%m-%d %H:%i:%s')str_pub_dt,
+        REPLACE(CONCAT_WS('; ', tag1,tag2,tag3,tag4,tag5),' ;','') tags
+    FROM #<@table_name>
+    WHERE #<@keyfield> = @_entity_id
+    LIMIT 1"
+
+    @fields_table="topic,title,frmt_content,post_status,cover,tag1,tag2,tag3,tag4,tag5,description,keywords,url,og-image,og-type,x-domain,x-image,x-type,mini_cover,sign,pass,pub_dt,blog,flat_content,format,viewcount,rank,rankcount"
+    function setPrintTitles(&db,&data)
+    {
+        using data
+        {
+            member @"titles"
+            {
+                @"title": dbr.vars.getd(db,"FXCA108","")
+                @"subtitle": dbr.vars.getd(db,"FXCA109","")
+                @"subtitle_2": dbr.vars.getd(db,"FXCA110","")
+                @"footer": dbr.vars.getd(db,"FXCA111","")
+            }
+        }
+    }
+
+    function prepareView(&db,&params,&data)
+    {
+        //#region prepareView()
+        is_new = (@@(params,"$_entity_id") == "_new")
+
+        topic = @@(params,"#topic")
+        if field.exist(data,"form") { topic = @@(data,"#form/topic") }
+        else if field.exist(data,"entity") { topic = @@(data,"#entity/topic") }
+
+        if topic > 0 
+        {
+            sql = "select sys_pk,id,title,if(private,'Sí','No') private from cnt_topic where sys_pk = @topic"
+            params<"topic"> : topic
+            data<"topic*"> : dbr.rec(db,sql,params)
+        }
+
+         data<"tags*"> : dbr.list(db,"select tagname from cnt_tag where not ifnull(sys_deleted,0) order by tagname asc",@null)
+
+        isnew = (@@(params,"$_entity_id") == "_new")
+
+        if not(isnew)
+        {
+            params.id := @@(data,"$entity/sys_guid")
+            do setImagesPaths(db)
+            data<"imgpath"> : dbr.attachment.path(params)
+            data<"imgurl"> : dbr.attachment.url(params)
+        }
+
+        do setPrintTitles(db,data)
+    }
+    function GetStatus(&db,&params)
+    {
+        return dbr.list(db,"select id,const from cnt_post_status",params)
+    }
+    function list(&db,&params)
+    {
+        //#region list()
+        do dbr.apps.action.grant("TE30")
+        
+        new data
+        {
+            @"data*": entity.list(db,params)
+            @"blog*":dbr.rec(db,"select * from cnt_blog where sys_pk=@blog",params)
+            @"itemactions*": dbr.apps.itemactions(db,"DET0AC","action","",0)
+            @"itemreports*": dbr.apps.itemactions(db,"DET0AC","report","",0)
+            @"list_topics*": dbr.list(db,"select sys_pk, title from cnt_topic where not ifnull(sys_deleted,0)",@null)
+        }
+        data<"status*">:GetStatus(db,params)
+
+        do setPrintTitles(db,data)
+        return data
+
+        exception{ do catch(db,params,@null) }
+    }
+
+    function read(&db,&params)
+    {
+        //#region read()
+        do dbr.apps.action.grant("TE30")
+
+        if not(isset("@just_read_entity")) { @just_read_entity = @false }
+        if @just_read_entity { return entity.read(db,params) }
+
+        new data { @"entity*": entity.read(db,params) }
+        do prepareView(db,params,data)
+
+        data<"status*">:GetStatus(db,params)
+        
+        return data
+
+        exception{ do catch(db,params,@null) }
+    }
+
+    function blank(&db,&params)
+    {
+        //#region blank()
+        do dbr.apps.action.grant("TE30")
+        
+        new data {}
+        do prepareView(db,params,data)
+        data<"status*">:GetStatus(db,params)
+        return data
+        
+        exception{ do catch(db,params,@null) }
+    }
+
+    function GetSQL(&data)
+    {
+        ref fields_keys=list.create_from_fields(data)
+
+        fields=""
+        values=""
+        values_update=""
+        for i = 0; i < @count(fields_keys)
+        {
+            f=list.str(fields_keys,i)
+            if isanyword(f,@fields_table)
+            {
+                
+                v=f
+                if contains(f,"-")
+                {
+                    f1=replace(f,"-","_")
+                    data<f1>:@@(data,f)
+                    v=f1
+                }
+
+                fields=fields + "`"+f+"`,"
+                values=values + "@"+v+","
+                values_update=values_update + "`"+f+"`=@"+v+","
+            }
+        }
+        fields=substring(fields,0,length(fields)-1)
+        values=substring(values,0,length(values)-1)
+
+        data<"sys_uuid">:uuid()
+        sql="insert into "+@table_name+" (sys_guid,sys_dtcreated,sys_timestamp,"+fields+") values (@sys_uuid,now(),now(),"+values+")"
+
+        if @@(data,"#update")
+        {
+            values_update=substring(values_update,0,length(values_update)-1)
+            sql="update "+@table_name+" set "+ values_update
+            if @@(data,"#sys_pk")>0
+            {
+                sql =sql +" WHERE #<@keyfield> = @sys_pk"
+            }
+        }
+        return ftext(sql)
+    }
+    function create(&db,&params,&data)
+    {
+        //#region create()
+        @use_transaction = @false
+        @just_read_entity = @true
+        
+        do dbr.apps.action.pre("TE31")
+        do dbr.begin(db)
+
+        if @@(params,"$blog")=="" && @@(data,"$blog")==""{do rise_error(500,"Se requiere un blog")}
+
+        do validFields(data)
+        using data
+        {
+            @"sys_user": @@(@http_context, "$session/user/uid")
+            @"author": cut(@@(@http_context, "$session/user/name"),32)
+        }
+        if trim(@@(data,"$pub_dt"))==""{do field.remove(data,"pub_dt")}
+
+        data<"mini_cover">:@@(data,"$miniatura")
+        data<"cover">:@@(data,"$portada")
+        if @@(data,"#blog") < 0{ data<"blog">:@@(params,"#blog")}
+
+        data<"format">:"htm"
+
+        sql_insert=GetSQL(data)
+        // do rise_error(0,sql_insert)
+        do dbr.execute(db,sql_insert,data)
+
+        ref entity = dbr.rec(db,ftext("select * from #<@table_name> where sys_guid=@sys_uuid"),data)
+        
+        do SaveAttachments(db,params,entity)
+
+        do dbr.apps.action.pos(entity)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(entity)
+
+        entity<"url_redir">:replace(@URL_POST,"@blog",@@(data,"$blog"))
+
+        return entity
+
+        exception{ do catch(db,params,data) }
+    }
+
+    function setImagesPaths(&db)
+    {
+        @dbr.attachment.custom_path = dbr.vars.get(db,"cntman.post.image.path")
+        @dbr.attachment.custom_url = dbr.vars.get(db,"cntman.post.image.url")
+        @dbr.attachment.custom_mini = "/$/webshell/img/minis/"
+        
+        if @dbr.attachment.custom_path == "" { @dbr.attachment.custom_path = "data/@qname/cntman/post/@id/" }
+        if @dbr.attachment.custom_url == "" { @dbr.attachment.custom_url = "/$/data/@qname/cntman/post/@id/" }
+    }
+
+    function SaveAttachments(&db,&params,&data)
+    {
+        //#region SaveAttachments
+        do setImagesPaths(db)
+        
+        params.id := @@(data,"$sys_guid")
+        return dbr.attachment.upload(params)
+    }
+
+    function update(&db,&params,&data)
+    {
+        //#region update()
+        @use_transaction = @false
+        @just_read_entity = @true
+        
+        do dbr.apps.action.pre("TE32")
+        do dbr.begin(db)
+        
+        if @@(params,"$blog")=="" && @@(data,"$blog")==""{do rise_error(500,"Se requiere un blog")}
+
+        if trim(@@(data,"$pub_dt"))==""{do field.remove(data,"pub_dt")}
+
+        if @@(data,"#blog") < 0{ data<"blog">:@@(params,"#blog")}
+        do validFields(data)
+        data<"sys_lastuser"> : @@(@http_context, "$session/user/uid")
+        data<"mini_cover">:@@(data,"$miniatura")
+        data<"cover">:@@(data,"$portada")
+        data<"update">:@true
+        data<"format">:"htm"
+        sql_update=GetSQL(data)
+        
+        do dbr.execute(db,sql_update,data)
+        ref entity = dbr.rec(db,ftext("select * from #<@table_name> WHERE #<@keyfield> = @sys_pk"),data)
+        do SaveAttachments(db,params,entity)
+
+        do dbr.apps.action.pos(entity)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(entity)
+
+        entity<"url_redir">:replace(@URL_POST,"@blog",@@(data,"$blog"))
+
+        return entity
+
+        exception{ do catch(db,params,data) }
+    }
+
+    function delete(&db,&params)
+    {
+        //#region delete()
+        @use_transaction = @false
+        
+        do dbr.apps.action.pre("TE33")
+        do dbr.begin(db)
+
+        ref entity = entity.delete(db,params)
+
+        do dbr.apps.action.pos(entity)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(entity)
+
+        return entity
+
+        exception{ do catch(db,params,@null) }
+    }
+
+    function validFields(&data)
+    {
+        if @@(data,"#topic") < 1 { do rise_error(511,"El valor de `Tema` es requerido.") }
+        if trim(@@(data,"$title")) == "" { do rise_error(512,"El valor de `Título` es requerido.") }
+        
+        ref tags = from.json(field.dstr(data,"tags","[]"))
+        do field.remove(data,"tags")
+        
+        tags_length = list.count(tags)
+        if tags_length < 1 { do rise_error(513,"Es necesario indicar al menos una etiqueta.") }
+        if tags_length > 5 { do rise_error(514,"Solo es posible seleccionar un máximo de 5 etiquetas.") }
+
+        for i = 0; i < 5
+        {
+            field = "tag"+str(i+1)
+            data<field> : list.str(tags,i)
+            exception{ data<field> : "" }
+        }
+    }
+    function DeleteThumbnail(&db,&params)
+    {
+        //#region DeleteThumbnail
+        @use_transaction = @false
+
+        ref entity = entity.read(db,params)
+        params.id := @@(entity,"$sys_guid")
+        params.filename := @@(entity,"$miniatura")
+        entity.miniatura := ""
+
+        do dbr.begin(db)
+        
+        do setImagesPaths(db)
+        do dbr.attachment.delete(params)
+        do dbr.execute(db,ftext("update #<@table_name> set mini_cover='' where #<@keyfield> = @_entity_id"),params)
+        
+        do dbr.commit(db)
+        
+        return entity
+
+        exception{ do catch(db,params,@null) }
+    }
+
+    function DeleteCover(&db,&params)
+    {
+        //#region DeleteCover
+        @use_transaction = @false
+
+        ref entity = entity.read(db,params)
+        params.id := @@(entity,"$sys_guid")
+        params.filename := @@(entity,"$portada")
+        entity.portada := ""
+
+        do dbr.begin(db)
+        
+        do setImagesPaths(db)
+        do dbr.attachment.delete(params)
+        do dbr.execute(db,ftext("update #<@table_name> set cover='' where #<@keyfield> = @_entity_id"),params)
+        
+        do dbr.commit(db)
+        
+        return entity
+
+        exception{ do catch(db,params,@null) }
+    }
+    catch::&db,&params,&data
+    {
+        //#region catch
+        code = last_error_code()
+        error = last_error()
+
+        if dbr.in_transaction(db) { do dbr.rollback(db) }
+        if isset("@@_action_context") { do dbr.apps.action.log() }
+
+        if isanyword(@@(params,"$_operation"),"create,update")
+        {
+            if isnull(data) { ref data:record.create() }
+
+            ref FormData = record.copy(data,"*")
+            do record.clear(data)
+            data<"form*"> : FormData
+            
+            do prepareView(db,params,data)
+        }
+        
+        do clear_exceptions()
+        do rise_error(code,error)
+    }
+
+    
+}

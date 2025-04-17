@@ -29,6 +29,14 @@
             {
                 "route": "/leadpass/",
                 "entity_type": "cnt_leadpass"
+            },
+            {
+                "route": "/blog/",
+                "entity_type": "cnt_blog"
+            },
+            {
+                "route": "/post/",
+                "entity_type": "cnt_post"
             }
         ]
     }

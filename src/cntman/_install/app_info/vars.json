@@ -69,6 +69,30 @@
                 "varinput": {
                     "control": "text"
                 }
+            },
+            {
+                "varname": "cntman.post.image.path",
+                "vardefault": "",
+                "varvalue": "data/@qname/cntman/post/@id/",
+                "varcaption": "URL de imágenes",
+                "varhelp": "Ruta física de imágenes para las publicaciones.",
+                "vartype": "string",
+                "varinput": 
+                {
+                    "control": "text"
+                }
+            },
+            {
+                "varname": "cntman.post.image.url",
+                "vardefault": "",
+                "varvalue": "/$/data/@qname/cntman/post/@id/",
+                "varcaption": "URL de imágenes",
+                "varhelp": "URL pública de imágenes para las publicaciones.",
+                "vartype": "string",
+                "varinput": 
+                {
+                    "control": "text"
+                }
             }
         ]
     }

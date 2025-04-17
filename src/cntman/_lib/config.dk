@@ -9,4 +9,9 @@ module "Variables globales"
 
 	@URL_SEARCH_TOPIC = "/!/cntman/topic/?only-list=true&search=@search"
 	@URL_SEARCH_CURSO = "/!/cntman/cursoscap/?only-list=true&search=@search"
+	@JS_QUILLJS="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"
+	@CSS_QUILLJS="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css"
+
+	@URL_POST="/!/cntman/post/?blog=@blog"
+	@URL_BLOG="/!/cntman/blog/"
 }

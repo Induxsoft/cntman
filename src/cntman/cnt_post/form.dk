@@ -1,0 +1,372 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+    #include "../_lib/config.dk"
+    #include "../_lib/lib.dk"
+	#include "../_lib/icons.dk"
+
+    do @context.begin(@crud_context)
+
+    ref entity = ifnull(@("&./entity"),record.create())
+    ref topic = ifnull(@("&./topic"),record.create())
+    ref titles = ifnull(@("&./titles"),record.create())
+
+	@_entities_type = @("$parameters/_entities_type")
+	@_entity_id = @("$parameters/_entity_id")
+	@is_new = (@_entity_id == "_new")
+    @blog=@("$parameters/blog")
+    form_id = "frm_"+@_entities_type
+    
+    tag1 = fd('tag1','tx',entity)
+    tag2 = fd('tag2','tx',entity)
+    tag3 = fd('tag3','tx',entity)
+    tag4 = fd('tag4','tx',entity)
+    tag5 = fd('tag5','tx',entity)
+
+    frmt_content=to.json(@@(entity,"$frmt_content"))
+    
+    function print_buttons()
+    {
+        btn_cls = "btn btn-sm border-secondary induxsoft-corners btn-main-action"
+        #$
+        button(class="#<btn_cls>" type="button" id="btn-submit" title="Guardar"){$"#<@ICON_SAVE>"}
+        #!
+    }
+
+    new sel_status
+    {
+        @"datatable*": ifnull(@("&./status"),list.create())
+        @"id": "post_status"
+        new member "attributes"
+        {
+            @"class": "form-select rounded-0"
+            @"name": "post_status"
+            @"required": ""
+        }
+        @"value_field": "id"
+        @"text_field": "const"
+        @"selected": fd("post_status","nm",entity)
+    }
+
+    point @buttons to print_buttons
+    new nav_config
+    {
+        @"title": ifstr(@is_new, "Nueva", "Editar") +" "+ "publicación"
+        @"urlexit": "../?blog="+@blog
+        @"buttons*": @buttons
+        member @"hidden"
+        {
+            @"print": @true
+        }
+    }
+    mini_src = "#"
+    port_src = "#"
+    miniatura = @@(entity,"$mini_cover")
+    portada = @@(entity,"$cover")
+
+    if not(@is_new) 
+    {
+        mini_src = path.concat(@("$./imgurl"),miniatura)
+        port_src = path.concat(@("$./imgurl"),portada)
+        if miniatura==""{mini_src=""}
+        if portada==""{port_src=""}
+    }
+    
+    str_pub_dt=date_str(now(),"yyyy-MM-dd HH:mm:ss")
+    if @@(entity,"#sys_pk") > 0
+    {
+        str_pub_dt=@@(entity,"$str_pub_dt")
+    }
+    
+    // Encapsula a la vista en su totalidad, todo lo que hay antes o después no se considera 
+    #$
+    div(class="container-lg" id="view")
+    {
+        script(src="#<@JS_QUILLJS>"){""}
+        link(href="#<@CSS_QUILLJS>" rel="stylesheet"){""}
+        link(href="/$/cntman/css/cnt_curso.css" rel="stylesheet"){""}
+        script(src="/$/cntman/js/cnt_leadpass.js"){$""}
+        script(src="/$/cntman/js/cnt_post.js"){$""}
+
+        // Filtros y acciones
+        section(id="top_area")
+        {
+            #!
+            do uie.printV12FormBar(nav_config)
+            #$
+        }
+        // Contenido principal
+        section(id="work_area" style="overflow-y:auto; overflow-x:hidden;")
+        {
+            form(method="POST" action="./" id="#<form_id>")
+            {
+                input(type="hidden" name="sys_pk" value="#<@@(entity, '#sys_pk')>")
+                input(type="hidden" name="sys_recver" value="#<@@(entity, '#sys_recver')>")
+                input(type="hidden" name="blog" value="#<@blog>")
+                input(type="hidden" name="frmt_content" value="#<fd('frmt_content','tx',entity)>")
+                input(type="hidden" name="flat_content" value="#<fd('flat_content','tx',entity)>")
+                #!
+                do uie.print_from_url_field()
+                #$
+
+                nav
+                {
+                    div(class="nav nav-tabs mb-2" id="nav-tab" role="tablist")
+                    {
+                        button(class="nav-link py-1 active" type="button" role="tab" id="nav-general-tab" "data-bs-toggle"="tab" "data-bs-target"="#nav-general" "aria-controls"="nav-general" "aria-selected"="true"){$"General"}
+                        button(class="nav-link py-1" type="button" role="tab" id="nav-etiquetas-tab" "data-bs-toggle"="tab" "data-bs-target"="#nav-etiquetas" "aria-controls"="nav-etiquetas" "aria-selected"="false"){$"Etiquetas"}
+                        button(class="nav-link py-1" type="button" role="tab" id="nav-seo-tab" "data-bs-toggle"="tab" "data-bs-target"="#nav-seo" "aria-controls"="nav-seo" "aria-selected"="false"){$"SEO"}
+                        button(class="nav-link py-1" type="button" role="tab" id="nav-avanzados-tab" "data-bs-toggle"="tab" "data-bs-target"="#nav-avanzados" "aria-controls"="nav-avanzados" "aria-selected"="false"){$"Avanzados"}
+                    }
+                }
+
+                div(class="tab-content")
+                {
+                    div(class="tab-pane fade show active" id="nav-general" role="tabpanel" "aria-labelledby"="nav-general-tab")
+                    {
+                        div(class="row")
+                        {
+                            div(class="col-12") 
+                            {
+                                label(class="form-label fw-bolder" "for"="ik_topic"){$"Tema:"}
+                                "input-key"(name="topic" id="ik_topic" "data-key"="sys_pk" "data-search"="id" "data-text"="title" "data-source"="#<@URL_SEARCH_TOPIC>&faqs=true" "data-value"="#<to.json(topic)>" columns="id,title,private" colcaptions="ID,Título,Privado" required="true"){$""}
+                            }
+                            div(class="col-10") 
+                            {
+                                label(class="form-label" "for"="title"){$"Título:"}
+                                input(class="form-control rounded-0" type="text" name="title" value="#<fd('title','tx',entity)>" maxlength="150" id="title" required="" spellcheck="true")
+                            }
+                          
+                            div(class="col-2") 
+                            {
+                                label(class="form-label" "for"="title"){$"Estado:"}
+                                #!
+                                do uie.dbSelect(sel_status)
+                                #$
+                            }
+                            div(class="col-12" style="height: 50vh;") 
+                            {
+                                label(class="form-label" "for"="frmt_content"){$"Contenido:"}
+                                div(id="editor" class="h-100"){""}
+                            }
+                        }
+                    }
+                    div(class="tab-pane fade" id="nav-etiquetas" role="tabpanel" "aria-labelledby"="nav-etiquetas-tab")
+                    {
+                        input(type="hidden" name="tags" value="" id="tags")
+                        div(class="col-12 mt-2")
+                        {
+                            hr{""}
+                            input(type="hidden" name="miniatura" value="#<miniatura>" id="miniatura")
+                            input(type="hidden" name="portada" value="#<portada>" id="portada")
+
+                            div(class="d-flex gap-2 my-2" id="preview-gallery")
+                            {
+                                div(class="gallery-item border rounded")
+                                {
+                                    div(class="d-flex gap-1 align-items-center justify-content-end bg-light")
+                                    {
+                                        input(class="d-none" type="file" name="-miniatura" id="-miniatura" accept=".jpg,.jpeg,.png")
+                                        label(class="btn btn-gallery" "for"="-miniatura" id="btn-upl-mini"){$"#<@ICON_UPLOAD>"}
+                                        button(class="btn btn-gallery" type="button" id="btn-del-mini-post"){$"#<@ICON_TRASH>"}
+                                    }
+                                    figure(class="figure")
+                                    {
+                                        img(class="figure-img img-fluid rounded ratio ratio-16x9" src="#<mini_src>" alt="Miniatura" id="mini-prev"){""}
+                                        figcaption(class="figure-caption" id="mini-caption" style="overflow: hidden;" title="#<portada>"){"#<miniatura>"}
+                                    }
+                                }
+                                div(class="gallery-item border rounded")
+                                {
+                                    div(class="d-flex gap-1 align-items-center justify-content-end bg-light")
+                                    {
+                                        input(class="d-none" type="file" name="-portada" id="-portada" accept=".jpg,.jpeg,.png")
+                                        label(class="btn btn-gallery" "for"="-portada" id="btn-upl-port"){$"#<@ICON_UPLOAD>"}
+                                        button(class="btn btn-gallery" type="button" id="btn-del-port-post"){$"#<@ICON_TRASH>"}
+                                    }
+                                    figure(class="figure")
+                                    {
+                                        img(class="figure-img img-fluid rounded ratio ratio-16x9" src="#<port_src>" alt="Portada" id="port-prev"){""}
+                                        figcaption(class="figure-caption" id="port-caption" style="overflow: hidden;" title="#<portada>"){"#<portada>"}
+                                    }
+                                }
+                            }
+                        }
+                        div(class="col-12")
+                        {
+                            label(class="form-label fw-bolder" "for"=""){$"Etiquetas:"}
+                            fieldset(class="d-flex flex-wrap overflow-auto border gap-2 p-2" id="tags_container" style="max-height:250px;")
+                            {
+                                #!
+                                ref tags = ifnull(@("&./tags"),list.create())
+                                etiquetas = trim(fd("tags","tx",entity))
+                                for i = 0; i < list.count(tags)
+                                {
+                                    tagname = @@(list.obj(tags,i), "$tagname")
+                                    name = "tag"+str(i+1)
+                                    id = "chk_"+name
+                                    checked = ifstr(contains(etiquetas,tagname), "checked", "")
+
+                                    #$
+                                    div(class="form-check") 
+                                    {
+                                        input(class="form-check-input" type="checkbox" value="#<tagname>" id="#<id>" "#<checked>"="")
+                                        label(class="form-check-label" "for"="#<id>"){"#<tagname>"}
+                                    }
+                                }
+                                #$
+                            }
+                        }
+                    }
+                    div(class="tab-pane fade" id="nav-seo" role="tabpanel" "aria-labelledby"="nav-seo-tab")
+                    {
+                        div(class="row")
+                        {
+                            div(class="col-6") 
+                            {
+                                label(class="form-label" "for"="description"){$"Descripción:"}
+                                textarea(class="form-control rounded-0" id="description" rows="5" name="description"){$"#<fd('description','tx',entity)>"}
+                            }
+                            div(class="col-6") 
+                            {
+                                label(class="form-label" "for"="keywords"){$"Palabras claves:"}
+                                textarea(class="form-control rounded-0" name="keywords" id="keywords" rows="5" spellcheck="true"){$"#<fd('keywords','tx',entity)>"}
+                            }
+                            div(class="col-12") 
+                            {
+                                label(class="form-label" "for"="url"){$"URL:"}
+                                textarea(class="form-control rounded-0" name="url" id="url" rows="1" maxlength="512" spellcheck="true"){$"#<fd('url','tx',entity)>"}
+                            }
+                            div(class="col-6") 
+                            {
+                                label(class="form-label" "for"="og-image"){$"Og-image:"}
+                                textarea(class="form-control rounded-0" name="og-image" id="og-image" rows="1" maxlength="512" spellcheck="true"){$"#<fd('og-image','tx',entity)>"}
+                            }
+                            div(class="col-6") 
+                            {
+                                label(class="form-label" "for"="og-type"){$"Og-type:"}
+                                input(class="form-control rounded-0" name="og-type" id="og-type"  maxlength="32" spellcheck="true" value="#<fd('og-type','tx',entity)>")
+                            }
+                            div(class="col-6") 
+                            {
+                                label(class="form-label" "for"="x-image"){$"X-image:"}
+                                textarea(class="form-control rounded-0" name="x-image" id="x-image" rows="1"  maxlength="64" spellcheck="true"){$"#<fd('x-image','tx',entity)>"}
+                            }
+                            div(class="col-6") 
+                            {
+                                label(class="form-label" "for"="x-domain"){$"X-domain:"}
+                                input(class="form-control rounded-0" name="x-domain" id="x-domain"  maxlength="64" spellcheck="true" value="#<fd('x-domain','tx',entity)>")
+                            }
+                            
+                            div(class="col-6") 
+                            {
+                                label(class="form-label" "for"="x-type"){$"X-type:"}
+                                input(class="form-control rounded-0" name="x-type" id="x-type"  maxlength="32" spellcheck="true" value="#<fd('x-type','tx',entity)>")
+                            }
+                        }
+                    }
+                    div(class="tab-pane fade" id="nav-avanzados" role="tabpanel" "aria-labelledby"="nav-avanzados-tab")
+                    {
+                        div(class="row")
+                        {
+                            div(class="col-12") 
+                            {
+                                label(class="form-label" "for"="sign"){$"Firma del autor:"}
+                                input(class="form-control rounded-0" name="sign" id="sign"  maxlength="255" spellcheck="true" value="#<fd('sign','tx',entity)>")
+                            }
+                            div(class="col-6") 
+                            {
+                                label(class="form-label" "for"="pass"){$"Contraseña:"}
+                                input(type="password" class="form-control rounded-0" name="pass" id="pass"  maxlength="32" spellcheck="true" value="#<fd('pass','tx',entity)>")
+                            }
+                            div(class="col-6") 
+                            {
+                                label(class="form-label" "for"="pub_dt"){$"Fecha y hora de publicación:"}
+                                input(type="datetime-local" class="form-control rounded-0" name="pub_dt" id="pub_dt"  value="#<str_pub_dt>")
+                            }
+                        }
+                    }
+                }
+                
+                
+            }
+        }
+        // Resúmenes y datos al pie
+        section(id="bottom_area")
+        {
+            //////////////////////////////////////////////////////////////////
+            div(id="_custom_area")
+            {
+                // script(src=""){$""}
+                script(type="text/javascript")
+                {$'
+                    document.addEventListener("DOMContentLoaded", () => 
+                    {
+                        const btn_submit = document.getElementById("btn-submit");
+                        const tags_container = document.getElementById("tags_container");
+                        const tags = document.getElementById("tags");
+                        
+                        btn_submit.addEventListener("click", (e) => 
+                        {
+                        
+                            e.preventDefault();
+                            leadpass.requesting=true;
+
+                            if (!leadpass.form.reportValidity())return;
+
+                            const checked_tags = tags_container.querySelectorAll(\'input[type="checkbox"]:checked\');
+                            let etiquetas = [];
+
+                            if (checked_tags.length < 1) 
+                            {
+                                alert("Es necesario indicar al menos una etiqueta.");
+                                return
+                            }
+                            if (checked_tags.length > 5) 
+                            {
+                                alert("Solo es posible seleccionar un máximo de 5 etiquetas.");
+                                return
+                            }
+
+                            checked_tags.forEach((chk) => { etiquetas.push(chk.value) });
+                            tags.value = JSON.stringify(etiquetas);
+                            
+                            leadpass.ff["frmt_content"].value=quill.getSemanticHTML();
+                            leadpass.ff["flat_content"].value=quill.getText();
+
+                            InduxsoftCrudlModel.Submit("#<form_id>");
+                        });
+
+                        const quill = new Quill("#editor", 
+                        {
+                            modules: 
+                            {
+                                toolbar: true,
+                            },
+                            theme: "snow"
+                        });
+
+                        if(#<frmt_content>!="")
+                        {
+                            quill.clipboard.dangerouslyPasteHTML(0,#<frmt_content>);
+                        }
+                        leadpass.formid = "#<form_id>";
+                        leadpass._params = #<to.json(@("&parameters"))>;
+                        leadpass.init();
+                        
+
+                        // Script injection
+                        #<@@(@crud_context,"script")>
+                    });
+                '}
+            }
+        }
+    }
+    #!
+    
+    do @context.end()
+}

@@ -36,3 +36,15 @@ TE71,Crear contenido restringido,cntman.leadpass
 TE72,Editar contenido restringido,cntman.leadpass
 TE73,Eliminar contenido restringido,cntman.leadpass
 TE74,Consultar contenido restringido,cntman.leadpass
+
+cntman.post,Administrar publicaciones,cntman
+TE80,Administrar publicaciones,cntman.post
+TE81,Crear publicación,cntman.post
+TE82,Editar publicaciones,cntman.post
+TE83,Eliminar publicaciones,cntman.post
+
+cntman.blog,Administrar blogs,cntman
+TE90,Administrar blogs,cntman.blog
+TE91,Crear blogs,cntman.blog
+TE92,Editar blogs,cntman.blog
+TE93,Eliminar blogs,cntman.blog

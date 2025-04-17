@@ -22,8 +22,8 @@ var leadpass = {
         const porttext = document.getElementById("port-caption");
 
         btn_submit.addEventListener("click", (e) => this.submit());
-        btn_del_mini.addEventListener("click", (e) => this.DeleteThumbnail());
-        btn_del_port.addEventListener("click", (e) => this.DeleteCover());
+        if(btn_del_mini)btn_del_mini.addEventListener("click", (e) => this.DeleteThumbnail());
+        if(btn_del_port)btn_del_port.addEventListener("click", (e) => this.DeleteCover());
         miniatura.addEventListener("change", (event) => {
             const file = event.target.files[0];
 
