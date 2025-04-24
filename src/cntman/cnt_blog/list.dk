@@ -48,6 +48,7 @@ module "list.dk"
             member @"id" { @"caption":"ID" }
             member @"title" { @"caption":"Título" }
             member @"description" { @"caption":"Descripción" }
+            member @"private" { @"caption":"Privado" }
             member @"_action"
             {
                 @"template":'<a href="'+replace(@URL_POST,"@blog","${DataRow.sys_pk}")+'" style="'+style+'">Publicaciones</a>'

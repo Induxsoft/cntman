@@ -68,6 +68,7 @@ module "list.dk"
             member @"title" { @"caption":"Título" }
             member @"tags" { @"caption":"Etiquetas" }
             member @"estado" { @"caption":"Estado" }
+            member @"author" { @"caption":"Autor" }
             member @"str_pub_dt"{@"caption":"Fecha y hora de publicación"}
             member @"_actions"
             {

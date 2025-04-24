@@ -69,14 +69,46 @@ module "Temas de contenido:topic"
         where = ""
 
         if @@(params,"#parent") > 0 { where = where + " AND a.parent = @parent" }
-        if parse.bool(@@(params,"$articles")) { where = where + " AND a.articles" }
-        if parse.bool(@@(params,"$faqs")) { where = where + " AND a.faqs" }
-        if parse.bool(@@(params,"$forums")) { where = where + " AND a.forums" }
-        if parse.bool(@@(params,"$files")) { where = where + " AND a.files" }
-        if parse.bool(@@(params,"$links")) { where = where + " AND a.links" }
-        if parse.bool(@@(params,"$training")) { where = where + " AND a.training" }
-        if parse.bool(@@(params,"$anything")) { where = where + " AND a.anything" }
-        if parse.bool(@@(params,"$private")) { where = where + " AND a.private" }
+        if field.exist(params,"articles")
+        {
+            if parse.bool(@@(params,"$articles")) { where = where + " AND a.articles" }
+            else { where = where + " AND NOT IFNULL(a.articles,0)" }
+        }
+        if field.exist(params,"faqs")
+        {
+            if parse.bool(@@(params,"$faqs")) { where = where + " AND a.faqs" }
+            else { where = where + " AND NOT IFNULL(a.faqs,0)" }
+        }
+        if field.exist(params,"forums")
+        {
+            if parse.bool(@@(params,"$forums")) { where = where + " AND a.forums" }
+            else { where = where + " AND NOT IFNULL(a.forums,0)" }
+        }
+        if field.exist(params,"files")
+        {
+            if parse.bool(@@(params,"$files")) { where = where + " AND a.files" }
+            else { where = where + " AND NOT IFNULL(a.files,0)" }
+        }
+        if field.exist(params,"links")
+        {
+            if parse.bool(@@(params,"$links")) { where = where + " AND a.links" }
+            else { where = where + " AND NOT IFNULL(a.links,0)" }
+        }
+        if field.exist(params,"training")
+        {
+            if parse.bool(@@(params,"$training")) { where = where + " AND a.training" }
+            else { where = where + " AND NOT IFNULL(a.training,0)" }
+        }
+        if field.exist(params,"anything")
+        {
+            if parse.bool(@@(params,"$anything")) { where = where + " AND a.anything" }
+            else { where = where + " AND NOT IFNULL(a.anything,0)" }
+        }
+        if field.exist(params,"private")
+        {
+            if parse.bool(@@(params,"$private")) { where = where + " AND a.private" }
+            else { where = where + " AND NOT IFNULL(a.private,0)" }
+        }
         if @@(params,"$search") != "" { where = where + " AND (a.id = @search OR a.title LIKE CONCAT('%',@search,'%'))" }
 
         @list_query = ftext(@list_query)

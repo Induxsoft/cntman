@@ -13,10 +13,12 @@ module "Etiquetas de contenido:tag"
 
     @list_query = "
     SELECT
-        sys_pk,sys_recver,
+        sys_pk,
+        sys_recver,
         id,
         title,
-        IFNULL(description,'') description
+        IFNULL(description,'') description,
+        IF(IFNULL(private,0)=1, 'Sí', 'No') private
     FROM #<@table_name>
     WHERE NOT IFNULL(sys_deleted,0)
         AND IF(IFNULL(@fil_text,'')!='', (title LIKE CONCAT('%',@fil_text,'%') OR id LIKE CONCAT('%',@fil_text,'%') OR description LIKE CONCAT('%',@fil_text,'%')), TRUE)
@@ -24,10 +26,16 @@ module "Etiquetas de contenido:tag"
     LIMIT #<@default_max_rows>
     "
 
-    @read_query = "SELECT sys_pk,sys_recver,
+    @read_query = "
+    SELECT
+        sys_pk,
+        sys_recver,
         id,
         title,
-        IFNULL(description,'') description FROM #<@table_name> WHERE #<@keyfield> = @_entity_id LIMIT 1"
+        IFNULL(description,'') description,
+        IFNULL(private,0) private
+    FROM #<@table_name>
+    WHERE #<@keyfield> = @_entity_id LIMIT 1"
 
     function setPrintTitles(&db,&data)
     {
@@ -107,6 +115,7 @@ module "Etiquetas de contenido:tag"
         do dbr.apps.action.pre("TE91")
         do dbr.begin(db)
 
+        data<"private"> : parse.bool(@@(data,"$private"))
         ref entity = entity.create(db,params,data)
 
         do dbr.apps.action.pos(entity)
@@ -127,6 +136,7 @@ module "Etiquetas de contenido:tag"
         do dbr.apps.action.pre("TE92")
         do dbr.begin(db)
 
+        data<"private"> : parse.bool(@@(data,"$private"))
         ref entity = entity.update(db,params,data)
 
         do dbr.apps.action.pos(entity)

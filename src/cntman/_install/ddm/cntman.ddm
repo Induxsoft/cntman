@@ -36,7 +36,7 @@ model "cntman"
 
     entity "cnt_faq" : "TableModel"
     {
-        @"topic" ref: "cnt_topic" required
+        @"topic" ref:"cnt_topic" required
         @"title" string(150) required
         @"author" string(32) required
         @"detail" memo
@@ -148,6 +148,7 @@ model "cntman"
             field "lead"
         }
     }
+
     entity "cnt_post_status" : "EnumModel"
     {
         // 0-Borrador, el post solo pueden verlo los administradores y editarlo el autor
@@ -156,20 +157,19 @@ model "cntman"
     }
     entity "cnt_post" : "TableModel"
     {
-
-    // Principal
-        @"topic" ref: "cnt_topic" required
+        // Principal
+        @"topic" ref:"cnt_topic" required
         @"title" string(255) required
         @"frmt_content" memo //Contenido formateado (Html o MD)
         @"post_status" ref:"cnt_post_status" required
         @"cover" string(512) //Url de imagen de portada
-    // Etiquetas
+        // Etiquetas
         @"tag1" string(32) required
         @"tag2" string(32)
         @"tag3" string(32)
         @"tag4" string(32)
         @"tag5" string(32)
-    // SEO
+        // SEO
         @"description" memo //Descripción usada también en listas o búsquedas
         @"keywords" memo
         @"url" string(512)
@@ -178,14 +178,12 @@ model "cntman"
         @"x-domain" string(64)
         @"x-image" string(512)
         @"x-type" string(32)
-
-    //Avanzados
+        // Avanzados
         @"mini_cover" string(512) //Url de miniatura del post
         @"sign" string(255) //Firma del autor
         @"pass" string(32) // MD5 de una contraseña requerida para mostrar el artículo
         @"pub_dt" datetime //Fecha y hora de publicación, si es null, es inmediato
-        
-    // Control interno (No editables ni visibles)
+        // Control interno (No editables ni visibles)
         @"blog" ref:"cnt_blog" required //Blog al que pertenece la entrada
         @"flat_content" memo // Contenido en texto plano
         @"format" string(3) // htm=html | md=markdown
@@ -198,5 +196,6 @@ model "cntman"
         @"id" string(32) unique required
         @"title" string(150) required
         @"description" memo
+        @"private" bool
     }
 }

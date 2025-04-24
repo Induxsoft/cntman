@@ -14,6 +14,7 @@ module ":post"
     @list_query = "
     SELECT
         q.sys_pk,
+        q.sys_user AS author,
         q.title,
         REPLACE(CONCAT_WS('; ', q.tag1,q.tag2,q.tag3,q.tag4,q.tag5),' ;','') tags,
         ps.const estado,
@@ -36,7 +37,7 @@ module ":post"
     WHERE #<@keyfield> = @_entity_id
     LIMIT 1"
 
-    @fields_table="topic,title,frmt_content,post_status,cover,tag1,tag2,tag3,tag4,tag5,description,keywords,url,og-image,og-type,x-domain,x-image,x-type,mini_cover,sign,pass,pub_dt,blog,flat_content,format,viewcount,rank,rankcount"
+    @fields_table="sys_user,sys_lastuser,topic,title,frmt_content,post_status,cover,tag1,tag2,tag3,tag4,tag5,description,keywords,url,og-image,og-type,x-domain,x-image,x-type,mini_cover,sign,pass,pub_dt,blog,flat_content,format,viewcount,rank,rankcount"
     function setPrintTitles(&db,&data)
     {
         using data
@@ -67,11 +68,10 @@ module ":post"
             data<"topic*"> : dbr.rec(db,sql,params)
         }
 
-         data<"tags*"> : dbr.list(db,"select tagname from cnt_tag where not ifnull(sys_deleted,0) order by tagname asc",@null)
+        data<"blog*"> : dbr.rec(db,"select id, title, ifnull(private,0) private from cnt_blog where sys_pk = @blog",params)
+        data<"tags*"> : dbr.list(db,"select tagname from cnt_tag where not ifnull(sys_deleted,0) order by tagname asc",@null)
 
-        isnew = (@@(params,"$_entity_id") == "_new")
-
-        if not(isnew)
+        if not(is_new)
         {
             params.id := @@(data,"$entity/sys_guid")
             do setImagesPaths(db)
@@ -111,10 +111,14 @@ module ":post"
         //#region read()
         do dbr.apps.action.grant("TE30")
 
+        ref entity = entity.read(db,params)
         if not(isset("@just_read_entity")) { @just_read_entity = @false }
-        if @just_read_entity { return entity.read(db,params) }
+        if @just_read_entity { return entity }
 
-        new data { @"entity*": entity.read(db,params) }
+        new data
+        {
+            @"entity*": entity
+        }
         do prepareView(db,params,data)
 
         data<"status*">:GetStatus(db,params)
@@ -195,7 +199,6 @@ module ":post"
         using data
         {
             @"sys_user": @@(@http_context, "$session/user/uid")
-            @"author": cut(@@(@http_context, "$session/user/name"),32)
         }
         if trim(@@(data,"$pub_dt"))==""{do field.remove(data,"pub_dt")}
 

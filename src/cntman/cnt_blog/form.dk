@@ -76,6 +76,12 @@ module "form.dk"
 
                 label(class="form-label" "for"="description"){$"Descripción"}
                 textarea(class="form-control rounded-0" name="description" id="description" rows="5" spellcheck="true"){$"#<fd('description','tx',entity)>"}
+
+                div(class="form-check mt-2")
+                {
+                    input(class="form-check-input" type="checkbox" name="private" id="private" "#<fd('private','ch',entity)>"="")
+                    label(class="form-check-label" "for"="private"){$"Privado"}
+                }
             }
         }
         // Resúmenes y datos al pie

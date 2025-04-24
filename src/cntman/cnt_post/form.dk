@@ -11,6 +11,7 @@ module "form.dk"
 
     do @context.begin(@crud_context)
 
+    ref blog = ifnull(@("&./blog"),record.create())
     ref entity = ifnull(@("&./entity"),record.create())
     ref topic = ifnull(@("&./topic"),record.create())
     ref titles = ifnull(@("&./titles"),record.create())
@@ -63,6 +64,7 @@ module "form.dk"
             @"print": @true
         }
     }
+
     mini_src = "#"
     port_src = "#"
     miniatura = @@(entity,"$mini_cover")
@@ -76,7 +78,10 @@ module "form.dk"
         if portada==""{port_src=""}
     }
     
+    sign=fd('sign','tx',entity)
     str_pub_dt=date_str(now(),"yyyy-MM-dd HH:mm:ss")
+    if @is_new { sel_status<"selected"> : 2 }
+    if @is_new && sign=="" { sign=@@(@http_context,"$session/user/name") }
     if @@(entity,"#sys_pk") > 0
     {
         str_pub_dt=@@(entity,"$str_pub_dt")
@@ -133,7 +138,7 @@ module "form.dk"
                             div(class="col-12") 
                             {
                                 label(class="form-label fw-bolder" "for"="ik_topic"){$"Tema:"}
-                                "input-key"(name="topic" id="ik_topic" "data-key"="sys_pk" "data-search"="id" "data-text"="title" "data-source"="#<@URL_SEARCH_TOPIC>&faqs=true" "data-value"="#<to.json(topic)>" columns="id,title,private" colcaptions="ID,Título,Privado" required="true"){$""}
+                                "input-key"(name="topic" id="ik_topic" "data-key"="sys_pk" "data-search"="id" "data-text"="title" "data-source"="#<@URL_SEARCH_TOPIC>&private=#<@@(blog,'#private')>" "data-value"="#<to.json(topic)>" columns="id,title,private" colcaptions="ID,Título,Privado" required="true"){$""}
                             }
                             div(class="col-10") 
                             {
@@ -276,7 +281,7 @@ module "form.dk"
                             div(class="col-12") 
                             {
                                 label(class="form-label" "for"="sign"){$"Firma del autor:"}
-                                input(class="form-control rounded-0" name="sign" id="sign"  maxlength="255" spellcheck="true" value="#<fd('sign','tx',entity)>")
+                                input(class="form-control rounded-0" name="sign" id="sign"  maxlength="255" spellcheck="true" value="#<sign>")
                             }
                             div(class="col-6") 
                             {
