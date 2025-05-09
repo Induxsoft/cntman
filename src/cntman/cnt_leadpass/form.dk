@@ -158,6 +158,7 @@ module "form.dk"
                             div(class="gallery-item border rounded"){
                                 div(class="d-flex gap-1 align-items-center justify-content-end bg-light")
                                 {
+                                    span(class="flex-grow-1 ms-1"){"Miniatura"}
                                     input(class="d-none" type="file" name="-miniatura" id="-miniatura" accept=".jpg,.jpeg,.png")
                                     label(class="btn btn-gallery" "for"="-miniatura" id="btn-upl-mini"){$"#<@ICON_UPLOAD>"}
                                     button(class="btn btn-gallery" type="button" id="btn-del-mini"){$"#<@ICON_TRASH>"}
@@ -171,6 +172,7 @@ module "form.dk"
                             div(class="gallery-item border rounded"){
                                 div(class="d-flex gap-1 align-items-center justify-content-end bg-light")
                                 {
+                                    span(class="flex-grow-1 ms-1"){"Portada"}
                                     input(class="d-none" type="file" name="-portada" id="-portada" accept=".jpg,.jpeg,.png")
                                     label(class="btn btn-gallery" "for"="-portada" id="btn-upl-port"){$"#<@ICON_UPLOAD>"}
                                     button(class="btn btn-gallery" type="button" id="btn-del-port"){$"#<@ICON_TRASH>"}

@@ -111,6 +111,7 @@ module "form.dk"
             {
                 input(type="hidden" name="sys_pk" value="#<@@(entity, '#sys_pk')>")
                 input(type="hidden" name="sys_recver" value="#<@@(entity, '#sys_recver')>")
+                input(type="hidden" name="sys_guid" value="#<ifstr(@is_new, uuid(), @@(entity,'$sys_guid'))>")
                 input(type="hidden" name="blog" value="#<@blog>")
                 input(type="hidden" name="frmt_content" value="#<fd('frmt_content','tx',entity)>")
                 input(type="hidden" name="flat_content" value="#<fd('flat_content','tx',entity)>")
@@ -175,6 +176,7 @@ module "form.dk"
                                 {
                                     div(class="d-flex gap-1 align-items-center justify-content-end bg-light")
                                     {
+                                        span(class="flex-grow-1 ms-1"){"Miniatura"}
                                         input(class="d-none" type="file" name="-miniatura" id="-miniatura" accept=".jpg,.jpeg,.png")
                                         label(class="btn btn-gallery" "for"="-miniatura" id="btn-upl-mini"){$"#<@ICON_UPLOAD>"}
                                         button(class="btn btn-gallery" type="button" id="btn-del-mini-post"){$"#<@ICON_TRASH>"}
@@ -182,13 +184,14 @@ module "form.dk"
                                     figure(class="figure")
                                     {
                                         img(class="figure-img img-fluid rounded ratio ratio-16x9" src="#<mini_src>" alt="Miniatura" id="mini-prev"){""}
-                                        figcaption(class="figure-caption" id="mini-caption" style="overflow: hidden;" title="#<portada>"){"#<miniatura>"}
+                                        figcaption(class="figure-caption" id="mini-caption" style="overflow: hidden;" title="#<miniatura>"){"#<miniatura>"}
                                     }
                                 }
                                 div(class="gallery-item border rounded")
                                 {
                                     div(class="d-flex gap-1 align-items-center justify-content-end bg-light")
                                     {
+                                        span(class="flex-grow-1 ms-1"){"Portada"}
                                         input(class="d-none" type="file" name="-portada" id="-portada" accept=".jpg,.jpeg,.png")
                                         label(class="btn btn-gallery" "for"="-portada" id="btn-upl-port"){$"#<@ICON_UPLOAD>"}
                                         button(class="btn btn-gallery" type="button" id="btn-del-port-post"){$"#<@ICON_TRASH>"}
@@ -234,7 +237,7 @@ module "form.dk"
                             div(class="col-6") 
                             {
                                 label(class="form-label" "for"="description"){$"Descripción:"}
-                                textarea(class="form-control rounded-0" id="description" rows="5" name="description"){$"#<fd('description','tx',entity)>"}
+                                textarea(class="form-control rounded-0" id="description" rows="5" name="description" spellcheck="true"){$"#<fd('description','tx',entity)>"}
                             }
                             div(class="col-6") 
                             {
@@ -244,33 +247,33 @@ module "form.dk"
                             div(class="col-12") 
                             {
                                 label(class="form-label" "for"="url"){$"URL:"}
-                                textarea(class="form-control rounded-0" name="url" id="url" rows="1" maxlength="512" spellcheck="true"){$"#<fd('url','tx',entity)>"}
+                                textarea(class="form-control rounded-0" name="url" id="url" rows="1" maxlength="512" spellcheck="false"){$"#<fd('url','tx',entity)>"}
                             }
                             div(class="col-6") 
                             {
                                 label(class="form-label" "for"="og-image"){$"Og-image:"}
-                                textarea(class="form-control rounded-0" name="og-image" id="og-image" rows="1" maxlength="512" spellcheck="true"){$"#<fd('og-image','tx',entity)>"}
+                                textarea(class="form-control rounded-0" name="og-image" id="og-image" rows="1" maxlength="512" spellcheck="false"){$"#<fd('og-image','tx',entity)>"}
                             }
                             div(class="col-6") 
                             {
                                 label(class="form-label" "for"="og-type"){$"Og-type:"}
-                                input(class="form-control rounded-0" name="og-type" id="og-type"  maxlength="32" spellcheck="true" value="#<fd('og-type','tx',entity)>")
+                                input(class="form-control rounded-0" name="og-type" id="og-type"  maxlength="32" spellcheck="false" value="#<fd('og-type','tx',entity)>")
                             }
                             div(class="col-6") 
                             {
                                 label(class="form-label" "for"="x-image"){$"X-image:"}
-                                textarea(class="form-control rounded-0" name="x-image" id="x-image" rows="1"  maxlength="64" spellcheck="true"){$"#<fd('x-image','tx',entity)>"}
+                                textarea(class="form-control rounded-0" name="x-image" id="x-image" rows="1"  maxlength="64" spellcheck="false"){$"#<fd('x-image','tx',entity)>"}
                             }
                             div(class="col-6") 
                             {
                                 label(class="form-label" "for"="x-domain"){$"X-domain:"}
-                                input(class="form-control rounded-0" name="x-domain" id="x-domain"  maxlength="64" spellcheck="true" value="#<fd('x-domain','tx',entity)>")
+                                input(class="form-control rounded-0" name="x-domain" id="x-domain"  maxlength="64" spellcheck="false" value="#<fd('x-domain','tx',entity)>")
                             }
                             
                             div(class="col-6") 
                             {
                                 label(class="form-label" "for"="x-type"){$"X-type:"}
-                                input(class="form-control rounded-0" name="x-type" id="x-type"  maxlength="32" spellcheck="true" value="#<fd('x-type','tx',entity)>")
+                                input(class="form-control rounded-0" name="x-type" id="x-type"  maxlength="32" spellcheck="false" value="#<fd('x-type','tx',entity)>")
                             }
                         }
                     }
@@ -281,12 +284,12 @@ module "form.dk"
                             div(class="col-12") 
                             {
                                 label(class="form-label" "for"="sign"){$"Firma del autor:"}
-                                input(class="form-control rounded-0" name="sign" id="sign"  maxlength="255" spellcheck="true" value="#<sign>")
+                                input(class="form-control rounded-0" name="sign" id="sign"  maxlength="255" spellcheck="false" value="#<sign>")
                             }
                             div(class="col-6") 
                             {
                                 label(class="form-label" "for"="pass"){$"Contraseña:"}
-                                input(type="password" class="form-control rounded-0" name="pass" id="pass"  maxlength="32" spellcheck="true" value="#<fd('pass','tx',entity)>")
+                                input(type="password" class="form-control rounded-0" name="pass" id="pass"  maxlength="32" spellcheck="false" value="#<fd('pass','tx',entity)>")
                             }
                             div(class="col-6") 
                             {
@@ -296,8 +299,6 @@ module "form.dk"
                         }
                     }
                 }
-                
-                
             }
         }
         // Resúmenes y datos al pie
@@ -340,24 +341,15 @@ module "form.dk"
                             checked_tags.forEach((chk) => { etiquetas.push(chk.value) });
                             tags.value = JSON.stringify(etiquetas);
                             
-                            leadpass.ff["frmt_content"].value=quill.getSemanticHTML();
-                            leadpass.ff["flat_content"].value=quill.getText();
+                            leadpass.ff["frmt_content"].value = post.quill.root.innerHTML; //post.quill.getSemanticHTML();
+                            leadpass.ff["flat_content"].value = post.quill.getText();
 
                             InduxsoftCrudlModel.Submit("#<form_id>");
                         });
 
-                        const quill = new Quill("#editor", 
-                        {
-                            modules: 
-                            {
-                                toolbar: true,
-                            },
-                            theme: "snow"
-                        });
-
                         if(#<frmt_content>!="")
                         {
-                            quill.clipboard.dangerouslyPasteHTML(0,#<frmt_content>);
+                            post.quill.clipboard.dangerouslyPasteHTML(0,#<frmt_content>);
                         }
                         leadpass.formid = "#<form_id>";
                         leadpass._params = #<to.json(@("&parameters"))>;

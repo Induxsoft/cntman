@@ -11,6 +11,11 @@ module "LeadpassController"
 
     switch @@(@http_context,"$request/get/_act")
     {
+        case "upload-image"
+        {
+            point @create to post.UploadImage
+            break
+        }
         case "delete-thumbnail"
         {
             point @delete to post.DeleteThumbnail

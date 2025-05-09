@@ -30,11 +30,13 @@ module ":post"
     "
     @read_query = "
     SELECT
-        *,
-        date_format(pub_dt,'%Y-%m-%d %H:%i:%s')str_pub_dt,
-        REPLACE(CONCAT_WS('; ', tag1,tag2,tag3,tag4,tag5),' ;','') tags
-    FROM #<@table_name>
-    WHERE #<@keyfield> = @_entity_id
+        p.*,
+        date_format(p.pub_dt,'%Y-%m-%d %H:%i:%s') str_pub_dt,
+        REPLACE(CONCAT_WS('; ', p.tag1,p.tag2,p.tag3,p.tag4,p.tag5),' ;','') tags,
+        b.sys_guid AS guid_blog
+    FROM #<@table_name> p
+        INNER JOIN cnt_blog b ON p.blog = b.sys_pk
+    WHERE p.#<@keyfield> = @_entity_id
     LIMIT 1"
 
     @fields_table="sys_user,sys_lastuser,topic,title,frmt_content,post_status,cover,tag1,tag2,tag3,tag4,tag5,description,keywords,url,og-image,og-type,x-domain,x-image,x-type,mini_cover,sign,pass,pub_dt,blog,flat_content,format,viewcount,rank,rankcount"
@@ -73,8 +75,12 @@ module ":post"
 
         if not(is_new)
         {
+            params.id_blog := @@(data,"$entity/guid_blog")
+            params.id_post := @@(data,"$entity/sys_guid")
             params.id := @@(data,"$entity/sys_guid")
+            
             do setImagesPaths(db)
+            
             data<"imgpath"> : dbr.attachment.path(params)
             data<"imgurl"> : dbr.attachment.url(params)
         }
@@ -227,25 +233,6 @@ module ":post"
         exception{ do catch(db,params,data) }
     }
 
-    function setImagesPaths(&db)
-    {
-        @dbr.attachment.custom_path = dbr.vars.get(db,"cntman.post.image.path")
-        @dbr.attachment.custom_url = dbr.vars.get(db,"cntman.post.image.url")
-        @dbr.attachment.custom_mini = "/$/webshell/img/minis/"
-        
-        if @dbr.attachment.custom_path == "" { @dbr.attachment.custom_path = "data/@qname/cntman/post/@id/" }
-        if @dbr.attachment.custom_url == "" { @dbr.attachment.custom_url = "/$/data/@qname/cntman/post/@id/" }
-    }
-
-    function SaveAttachments(&db,&params,&data)
-    {
-        //#region SaveAttachments
-        do setImagesPaths(db)
-        
-        params.id := @@(data,"$sys_guid")
-        return dbr.attachment.upload(params)
-    }
-
     function update(&db,&params,&data)
     {
         //#region update()
@@ -321,6 +308,46 @@ module ":post"
             exception{ data<field> : "" }
         }
     }
+
+    function setImagesPaths(&db)
+    {
+        @dbr.attachment.custom_path = dbr.vars.get(db,"cntman.post.image.path")
+        @dbr.attachment.custom_url = dbr.vars.get(db,"cntman.post.image.url")
+        @dbr.attachment.custom_mini = "/$/webshell/img/minis/"
+        
+        if @dbr.attachment.custom_path == "" { @dbr.attachment.custom_path = "data/@qname/cntman/post/@id/" }
+        if @dbr.attachment.custom_url == "" { @dbr.attachment.custom_url = "/$/data/@qname/cntman/post/@id/" }
+    }
+
+    function SaveAttachments(&db,&params,&data)
+    {
+        //#region SaveAttachments()
+        do setImagesPaths(db)
+        
+        if @@(params,"$_act") == "upload-image"
+        {
+            params.id_blog := dbr.str(db,"select sys_guid from cnt_blog where sys_pk = @id_blog",data)
+            params.id_post := @@(data,"$id_post")
+            params.id := @@(data,"$id_post")
+        }
+        else
+        {
+            params.id_blog := dbr.str(db,"select sys_guid from cnt_blog where sys_pk = @blog",data)
+            params.id_post := @@(data,"$sys_guid")
+            params.id := @@(data,"$sys_guid")
+        }
+
+        return dbr.attachment.upload(params)
+    }
+
+    function UploadImage(&db,&params,&data)
+    {
+        //#region UploadImage()
+        ref uploaded = SaveAttachments(db,params,data)
+        ref image = list.obj(uploaded,0)
+        return image
+    }
+
     function DeleteThumbnail(&db,&params)
     {
         //#region DeleteThumbnail
@@ -366,6 +393,7 @@ module ":post"
 
         exception{ do catch(db,params,@null) }
     }
+
     catch::&db,&params,&data
     {
         //#region catch
@@ -389,6 +417,4 @@ module ":post"
         do clear_exceptions()
         do rise_error(code,error)
     }
-
-    
 }

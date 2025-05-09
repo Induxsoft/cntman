@@ -37,28 +37,26 @@ module "list.dk"
     @blog=@("$parameters/blog")
     if trim(@blog)==""{do rise_error(500,"Se requiere un blog")}
 
-    style="cursor:pointer; text-decoration:none; outline:none; padding: 0px 8px; color:#000000;display: inline-block;
+    style="
+    background-color:#fff;
+    color:#000;
+    cursor:pointer;
+    text-decoration:none;
+    outline:none;
+    display: inline-block;
     font-weight: 400;
     line-height: 1.5;
-    color: #212529;
     text-align: center;
-    text-decoration: none;
     vertical-align: middle;
-    cursor: pointer;
     -webkit-user-select: none;
     -moz-user-select: none;
     user-select: none;
-    background-color: transparent;
-    border: 1px solid transparent;
-    padding: .375rem .75rem;
-    font-size: 1rem;
-    border-radius: .25rem;
     transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
-    border:1px solid;
+    border: 1px solid;
     padding: .25rem .5rem;
     font-size: .875rem;
-    border-radius: 0 !important;
-    margin-left:4px;
+    border-radius: 0;
+    margin-left: 4px;
     "
     new table_definition
     {
@@ -74,9 +72,9 @@ module "list.dk"
             {
                 @"no-print":@true
                 @"template":ftext('
-                            <a href="./${DataRow.sys_pk}/?blog=#<@blog>" style="'+style+'">Editar</a>
-                            <button onclick="javascript:InduxsoftCrudlModel.Delete(${DataRow.sys_pk});" style="'+style+'">Eliminar</button>
-                        ')
+                    <a href="./${DataRow.sys_pk}/?blog=#<@blog>" style="'+style+'">Editar</a>
+                    <button onclick="javascript:InduxsoftCrudlModel.Delete(${DataRow.sys_pk});" style="'+style+'">Eliminar</button>
+                ')
             }
         }
         @"table_footer": "Mostrando los primeros # registros"
