@@ -48,3 +48,9 @@ TE90,Administrar blogs,cntman.blog
 TE91,Crear blogs,cntman.blog
 TE92,Editar blogs,cntman.blog
 TE93,Eliminar blogs,cntman.blog
+
+cntman.suscripcion,Suscripciones,cntman
+TE100,Suscripciones,cntman.suscripcion
+TE101,Crear suscripción,cntman.suscripcion
+TE102,Editar suscripción,cntman.suscripcion
+TE103,Eliminar suscripción,cntman.suscripcion

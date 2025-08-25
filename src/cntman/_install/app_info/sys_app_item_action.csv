@@ -45,3 +45,8 @@ TE90,Administrar blogs,Blogs,,/!/cntman/blog/,0,cntman.blog,DET0AD,0,shortcut
 TE91,Crear blogs,Crear,,/!/cntman/blog/_new/,0,cntman.blog,DET0AD,0,action
 TE92,Editar blogs,Editar,,/!/cntman/blog/@_src_context_item_id/,0,cntman.blog,DET0AD,1,action
 TE93,Eliminar blogs,Eliminar,,javascript:InduxsoftCrudlModel.Delete(`@_src_context_item_id`);,0,cntman.blog,DET0AD,1,action
+
+TE100,Suscripciones,Suscripciones,,/!/cntman/suscripcion/,0,cntman.suscripcion,DET0AE,0,shortcut
+TE101,Crear suscripción,Crear,,/!/cntman/suscripcion/_new/,0,cntman.suscripcion,DET0AE,0,action
+TE102,Editar suscripción,Editar,,/!/cntman/suscripcion/@_src_context_item_id/,0,cntman.suscripcion,DET0AE,1,action
+TE103,Eliminar suscripción,Eliminar,,javascript:InduxsoftCrudlModel.Delete(`@_src_context_item_id`);,0,cntman.suscripcion,DET0AE,1,action

@@ -11,6 +11,42 @@ model "cntman"
     //* ======================================== [ ENTIDADES PRINCIPALES ]
     strict compatibility
 
+    //Representa suscripciones de contenido
+    entity "cnt_suscripcion" : "TableModel"
+    {
+        @"id" string(15) unique required
+        @"nombre" string(50) unique required
+        @"notas" memo
+    }
+
+
+    //Esquema de precios de un curso
+    entity "cnt_precio_curso"
+    {
+        @"ref_curso" ref:"cnt_curso" required
+        @"ref_suscripcion" ref:"cnt_suscripcion" required
+        @"precio" decimal(12,4) required
+        
+        index "cnt_precio_curso_idx1" unique
+        {
+            field "ref_curso"
+            field "ref_suscripcion"
+        }
+    }
+
+    //Esquema de precios de un acceso a contenido  restringido
+    entity "cnt_precio_leadpass"
+    {
+        @"ref_leadpass" ref:"cnt_leadpass" required
+        @"ref_suscripcion" ref:"cnt_suscripcion" required
+        @"precio" decimal(12,4) required
+        
+        index "cnt_precio_leadpass_idx1" unique
+        {
+            field "ref_leadpass"
+            field "ref_suscripcion"
+        }
+    }
     entity "cnt_topic" : "TableModel"
     {
         @"id" string(32) unique required // Un identificador único para el tópico
@@ -100,6 +136,8 @@ model "cntman"
         @"tag5" string(32)
         @"req_auth" bool
         @"hidden" bool
+        @"cobro_acceso" bool
+        @"precio_user" decimal(18,6) //precio para usuario sin suscripción
     }
 
     entity "cnt_curso_tema" : "TableModel"
@@ -132,6 +170,8 @@ model "cntman"
         @"miniatura" string(255)
         @"portada" string(255)
         @"hidden" bool
+        @"cobro_acceso" bool
+        @"precio_user" decimal(18,6) //precio para usuario sin suscripción
     }
 
     entity "cnt_leadpass_det" : "TableModel"
