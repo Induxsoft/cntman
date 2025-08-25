@@ -48,11 +48,20 @@ module "Gestión de contenido restringido :leadpass"
         IFNULL(miniatura,'') miniatura,
         IFNULL(portada,'') portada,
         IFNULL(stat_vistas,0) stat_vistas,
-        IFNULL(stat_vistas_uq,0) stat_vistas_uq
+        IFNULL(stat_vistas_uq,0) stat_vistas_uq,
+        IFNULL(cobro_acceso,0)cobro_acceso,
+        IFNULL(precio_user,0)precio_user
     FROM #<@table_name>
     WHERE #<@keyfield> = @_entity_id
     LIMIT 1
     "
+    @list_query_suscripcion="select s.sys_pk, s.id,s.nombre,s.notas,concat_ws(' - ',s.id,s.nombre)descripcion 
+    from cnt_suscripcion AS s
+     WHERE true "
+
+    @list_query_detalle="SELECT cl.ref_suscripcion idsuscripcion,concat_ws(' - ',cs.id,cs.nombre)suscripcion,cl.precio FROM  cnt_precio_leadpass cl 
+    INNER JOIN cnt_suscripcion cs ON cl.ref_suscripcion=cs.sys_pk
+    WHERE cl.ref_leadpass=@_entity_id"
 
     function setPrintTitles(&db,&data)
     {
@@ -118,12 +127,13 @@ module "Gestión de contenido restringido :leadpass"
     {
         //#region read()
         do dbr.apps.action.grant("TE70")
-
+        
         if not(isset("@just_read_entity")) { @just_read_entity = @false }
         if @just_read_entity { return entity.read(db,params) }
 
         new data { @"entity*": entity.read(db,params) }
         do prepareView(db,params,data)
+        do ListSuscripcions(db,params,data)
         return data
 
         exception{ do catch(db,params,@null) }
@@ -183,6 +193,8 @@ module "Gestión de contenido restringido :leadpass"
         
         new data {}
         do prepareView(db,params,data)
+        do ListSuscripcions(db,params,data)
+
         return data
         
         exception{ do catch(db,params,@null) }
@@ -197,10 +209,20 @@ module "Gestión de contenido restringido :leadpass"
         do dbr.apps.action.pre("TE71")
         do dbr.begin(db)
 
+        ref detalle=list.create()
+        if trim(@@(data,"$detalle"))!=""{ref detalle=from.json(@@(data,"$detalle"))}
+        
+        if parse.bool(@@(data,"$cobro_acceso")){data<"cobro_acceso">:1}
+        else{data<"cobro_acceso">:0}
+
+        do field.remove(data,"detalle")
+
         do validateFields(data)
         ref entity = entity.create(db,params,data)
 
+        do SaveDetSuscr(db,params,detalle,@@(entity,"#sys_pk"))
         do SaveAttachments(db,params,entity)
+
         do dbr.apps.action.pos(entity)
         do dbr.commit(db)
         do dbr.apps.action.ext(entity)
@@ -219,8 +241,17 @@ module "Gestión de contenido restringido :leadpass"
         do dbr.apps.action.pre("TE72")
         do dbr.begin(db)
 
+        ref detalle=list.create()
+        if trim(@@(data,"$detalle"))!=""{ref detalle=from.json(@@(data,"$detalle"))}
+        
+        if parse.bool(@@(data,"$cobro_acceso")){data<"cobro_acceso">:1}
+        else{data<"cobro_acceso">:0}
+
+        do field.remove(data,"detalle")
+
         do validateFields(data)
         ref entity = entity.update(db,params,data)
+        do SaveDetSuscr(db,params,detalle,@@(entity,"#sys_pk"))
 
         do SaveAttachments(db,params,entity)
         do dbr.apps.action.pos(entity)
@@ -328,6 +359,41 @@ module "Gestión de contenido restringido :leadpass"
         exception{ do catch(db,params,@null) }
     }
 
+    function ListSuscripcions(&db,&params,&entity)
+    {
+        entity<"suscripcions*">:dbr.list(db,ftext(@list_query_suscripcion),params)
+        entity<"suscr_entity*">:dbr.list(db,ftext(@list_query_detalle),params)
+    }
+    function SaveDetSuscr(&db,&params,&detalle,_entity_id)
+    {
+        params<"idlead">:_entity_id
+        ref detalle=ifnull(detalle,list.create())
+        //eliminar detalle del leads
+        do dbr.execute(db,"delete from cnt_precio_leadpass where ref_leadpass=@idlead",params)
+
+        for i = 0; i < @count(detalle)
+        {
+            ref det=@item(detalle,i)
+            if @@(det,"#idsuscripcion") > 0
+            {
+                new det_insert_upd
+                {
+                    @"ref_leadpass":_entity_id
+                    @"ref_suscripcion":@@(det,"#idsuscripcion")
+                    @"precio":@@(det,"#precio")
+                }
+
+                if dbr.num(db,"select count(*) from cnt_precio_leadpass where ref_leadpass=@ref_leadpass and ref_suscripcion=@ref_suscripcion",det_insert_upd)> 0
+                {
+                    do dbr.update(db,"cnt_precio_leadpass",det_insert_upd,"ref_leadpass=@ref_leadpass and ref_suscripcion=@ref_suscripcion",det_insert_upd)
+                }
+                else 
+                {
+                    do dbr.insert(db,"cnt_precio_leadpass",det_insert_upd)
+                }
+            }
+        }
+    }
     catch::&db,&params,&data
     {
         //#region catch

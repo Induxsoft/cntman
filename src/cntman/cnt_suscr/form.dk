@@ -1,0 +1,139 @@
+#include "dkli.dkh"
+#def InputKey "input-key"
+#def StackEdit "stack-edit"
+#def EditTable "edit-table"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+    #include "../_lib/config.dk"
+    #include "../_lib/lib.dk"
+	#include "../_lib/icons.dk"
+
+    do @context.begin(@crud_context)
+
+    ref entity = ifnull(@("&./entity"),record.create())
+    ref detail = ifnull(@("&./detail"),list.create())
+
+	@_entities_type = @("$parameters/_entities_type")
+	@_entity_id = @("$parameters/_entity_id")
+	@is_new = (@_entity_id == "_new")
+
+    @form_id = "frm_"+@_entities_type
+    stack_id = "stk_cursos"
+    table_id = "tbl_cursos"
+
+    mini_src = "#"
+    port_src = "#"
+    miniatura = @@(entity,"$miniatura")
+    portada = @@(entity,"$portada")
+
+    if not(@is_new) {
+        mini_src = path.concat(@("$./imgurl"),miniatura)
+        port_src = path.concat(@("$./imgurl"),portada)
+    }
+
+    ik_sm_style = "
+    #input_search_container, #input_description_container,
+    #button_search_container, #button_clear_container {
+        height: calc(1.5em + .5rem + 2px) !important;
+        padding: .25rem .5rem !important;
+        font-size: .875rem !important;
+    }
+    "
+
+    do AutoFillRows(detail,10)
+
+    function print_buttons()
+    {
+        btn_cls = "btn btn-sm border-secondary induxsoft-corners btn-main-action"
+        #$
+        button(class="#<btn_cls>" type="button" id="btn-submit" title="Guardar" onclick="InduxsoftCrudlModel.Submit('#<@form_id>')"){$"#<@ICON_SAVE>"}
+        #!
+    }
+    point @buttons to print_buttons
+    new nav_config
+    {
+        @"title": ifstr(@is_new, "Crear", "Editar") +" "+ " suscripción"
+        @"urlexit": "../"
+        @"buttons*": @buttons
+        member @"hidden"
+        {
+            @"print": @true
+            @"send": @true
+        }
+    }
+    // Encapsula a la vista en su totalidad, todo lo que hay antes o después no se considera 
+    #$
+    div(class="container-fluid" id="view")
+    {
+        link(href="/$/cntman/css/cnt_curso.css" rel="stylesheet"){""}
+        // Filtros y acciones
+        section(id="top_area")
+        {
+            #!
+            do uie.printV12FormBar(nav_config)
+            #$
+        }
+        // Contenido principal
+        section(id="work_area" style="overflow-y:auto; overflow-x:hidden; background-color:#F5F5F5;")
+        {
+            form(method="POST" action="./" id="#<@form_id>")
+            {
+                input(type="hidden" name="sys_pk" value="#<@@(entity, '#sys_pk')>")
+                input(type="hidden" name="sys_guid" value="#<@@(entity,'$sys_guid')>")
+                input(type="hidden" name="sys_recver" value="#<@@(entity, '#sys_recver')>")
+                #!
+                do uie.print_from_url_field()
+                #$
+
+                div(class="row")
+                {
+                    div(class="col-md-6 mb-2 pe-md-0")
+                    {
+                        div(class="row gx-2 bg-white mt-2 mx-2 ms-md-2 my-md-2 px-1 py-2")
+                        {
+                            div(class="col-4")
+                            {
+                                label(class="form-label" "for"="id"){$"ID:"}
+                                input(class="form-control form-control-sm rounded-0" type="text" name="id" value="#<fd('id','tx',entity)>" id="id" maxlength="15" spellcheck="false" required="")
+                            }
+                            div(class="col-8")
+                            {
+                                label(class="form-label" "for"="nombre"){$"Nombre:"}
+                                input(class="form-control form-control-sm rounded-0" type="text" name="nombre" value="#<fd('nombre','tx',entity)>" id="nombre" maxlength="50" spellcheck="true" required="")
+                            }
+                            div(class="col-12")
+                            {
+                                label(class="form-label" "for"="notas"){$"Notas:"}
+                                textarea(class="form-control form-control-sm rounded-0" name="notas" id="notas" spellcheck="true"){$"#<fd('notas','tx',entity)>"}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Resúmenes y datos al pie
+        section(id="bottom_area")
+        {
+            //////////////////////////////////////////////////////////////////
+            div(id="_custom_area")
+            {
+                script(type="text/javascript")
+                {$'
+                    document.addEventListener("DOMContentLoaded", () => 
+                    {
+
+                        // Script injection
+                        #<@@(@crud_context,"script")>
+                    });
+                '}
+            }
+        }
+    }
+    #!
+    
+    do @context.end()
+}

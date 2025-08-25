@@ -37,6 +37,10 @@
             {
                 "route": "/post/",
                 "entity_type": "cnt_post"
+            },
+            {
+                "route": "/suscripcion/",
+                "entity_type": "cnt_suscr"
             }
         ]
     }

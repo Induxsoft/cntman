@@ -45,7 +45,9 @@ module "Cursos de capacitación :curso"
         IFNULL(contenido,'') contenido,
         IFNULL(miniatura,'') miniatura,
         IFNULL(portada,'') portada,
-        REPLACE(CONCAT_WS('; ', tag1,tag2,tag3,tag4,tag5),' ;','') tags
+        REPLACE(CONCAT_WS('; ', tag1,tag2,tag3,tag4,tag5),' ;','') tags,
+        IFNULL(cobro_acceso,0)cobro_acceso,
+        IFNULL(precio_user,0)precio_user
     FROM #<@table_name>
     WHERE #<@keyfield> = @_entity_id
     LIMIT 1
@@ -67,6 +69,13 @@ module "Cursos de capacitación :curso"
     WHERE t.curso = COALESCE(@_entity_id,@icurso,@sys_pk)
     ORDER BY t.orden
     "
+    @list_query_suscripcion="select s.sys_pk, s.id,s.nombre,s.notas,concat_ws(' - ',s.id,s.nombre)descripcion 
+    from cnt_suscripcion AS s
+     WHERE true "
+
+    @list_query_detalle="SELECT cl.ref_suscripcion idsuscripcion,concat_ws(' - ',cs.id,cs.nombre)suscripcion,cl.precio FROM  cnt_precio_curso cl 
+    INNER JOIN cnt_suscripcion cs ON cl.ref_suscripcion=cs.sys_pk
+    WHERE cl.ref_curso=@_entity_id"
 
     function setPrintTitles(&db,&data)
     {
@@ -159,6 +168,8 @@ module "Cursos de capacitación :curso"
 
         new data { @"entity*": entity.read(db,params) }
         do prepareView(db,params,data)
+        do ListSuscripcions(db,params,data)
+
         return data
 
         exception{ do catch(db,params,@null) }
@@ -171,6 +182,7 @@ module "Cursos de capacitación :curso"
         
         new data {}
         do prepareView(db,params,data)
+        do ListSuscripcions(db,params,data)
         return data
         
         exception{ do catch(db,params,@null) }
@@ -185,8 +197,17 @@ module "Cursos de capacitación :curso"
         do dbr.apps.action.pre("TE51")
         do dbr.begin(db)
 
+        ref detalle=list.create()
+        if trim(@@(data,"$detalle"))!=""{ref detalle=from.json(@@(data,"$detalle"))}
+        
+        if parse.bool(@@(data,"$cobro_acceso")){data<"cobro_acceso">:1}
+        else{data<"cobro_acceso">:0}
+
+        do field.remove(data,"detalle")
+
         ref curso = validateFields(data)
         ref entity = entity.create(db,params,curso)
+        do SaveDetSuscr(db,params,detalle,@@(entity,"#sys_pk"))
 
         do SaveAttachments(db,params,entity)
         do dbr.apps.action.pos(entity)
@@ -207,10 +228,19 @@ module "Cursos de capacitación :curso"
         do dbr.apps.action.pre("TE52")
         do dbr.begin(db)
 
+        ref detalle=list.create()
+        if trim(@@(data,"$detalle"))!=""{ref detalle=from.json(@@(data,"$detalle"))}
+        
+        if parse.bool(@@(data,"$cobro_acceso")){data<"cobro_acceso">:1}
+        else{data<"cobro_acceso">:0}
+
+        do field.remove(data,"detalle")
+
         ref curso = validateFields(data)
         ref entity = entity.update(db,params,curso)
-
+        do SaveDetSuscr(db,params,detalle,@@(entity,"#sys_pk"))
         do SaveAttachments(db,params,entity)
+        
         do dbr.apps.action.pos(entity)
         do dbr.commit(db)
         do dbr.apps.action.ext(entity)
@@ -405,6 +435,41 @@ module "Cursos de capacitación :curso"
         exception{ do catch(db,params,@null) }
     }
 
+    function ListSuscripcions(&db,&params,&entity)
+    {
+        entity<"suscripcions*">:dbr.list(db,ftext(@list_query_suscripcion),params)
+        entity<"suscr_entity*">:dbr.list(db,ftext(@list_query_detalle),params)
+    }
+    function SaveDetSuscr(&db,&params,&detalle,_entity_id)
+    {
+        params<"id">:_entity_id
+        ref detalle=ifnull(detalle,list.create())
+        //eliminar detalle del leads
+        do dbr.execute(db,"delete from cnt_precio_curso where ref_curso=@id",params)
+
+        for i = 0; i < @count(detalle)
+        {
+            ref det=@item(detalle,i)
+            if @@(det,"#idsuscripcion") > 0
+            {
+                new det_insert_upd
+                {
+                    @"ref_curso":_entity_id
+                    @"ref_suscripcion":@@(det,"#idsuscripcion")
+                    @"precio":@@(det,"#precio")
+                }
+
+                if dbr.num(db,"select count(*) from cnt_precio_curso where ref_curso=@ref_curso and ref_suscripcion=@ref_suscripcion",det_insert_upd)> 0
+                {
+                    do dbr.update(db,"cnt_precio_curso",det_insert_upd,"ref_curso=@ref_curso and ref_suscripcion=@ref_suscripcion",det_insert_upd)
+                }
+                else 
+                {
+                    do dbr.insert(db,"cnt_precio_curso",det_insert_upd)
+                }
+            }
+        }
+    }
     catch::&db,&params,&data
     {
         //#region catch

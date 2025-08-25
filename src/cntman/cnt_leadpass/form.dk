@@ -49,6 +49,8 @@ module "form.dk"
             @"send": @true
         }
     }
+    ref suscripcions=list_to_record(@("&./suscripcions"),"sys_pk","descripcion")
+    do AutoFillRows(@("&./suscr_entity"),3)
     // Encapsula a la vista en su totalidad, todo lo que hay antes o después no se considera 
     #$
     div(class="container-lg" id="view")
@@ -181,6 +183,51 @@ module "form.dk"
                                 {
                                     img(class="figure-img img-fluid rounded ratio ratio-16x9" src="#<port_src>" alt="Portada" id="port-prev"){""}
                                     figcaption(class="figure-caption" id="port-caption"){"#<portada>"}
+                                }
+                            }
+                        }
+                    }
+                    div(class="col-12")
+                    {
+                        div(class="mb-5")
+                        {
+                            label
+                            {
+                                input(type="checkbox" id="cobro_acceso" name="cobro_acceso" "#<fd('cobro_acceso','ch',entity)>"="")
+                                b{"Cobro por acceso"}
+                            }
+                            
+                            div(id="container_table_precio")
+                            {
+                                label(style="" class="d-flex gap-1 align-items-end" id="lbl_precio")
+                                {
+                                    span{"Precio para usuarios sin suscripción:" }
+                                    input(type="number" class="form-control form-control-sm rounded-0" id="precio_user" name="precio_user" value="#<format(fd('precio_user','num',entity),'#.00')>" style="width:15%")
+                                }
+                                
+                                div(class="d-flex gap-1")
+                                {
+                                    span(class="flex-grow-1"){""}
+                                    button(type="button" title="Agregar fila" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" id="btn_table_add_row"){$"#<@ICON_ADD_ROW>"}
+                                    button(type="button" title="Eliminar fila" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" id="btn_table_del_row"){$"#<@ICON_REMOVE_ROW>"}
+                                }
+
+                                "edit-table"(id="tbl_precios" data="#<to.json(@('&./suscr_entity'))>" "auto-confirm"="true" style="width:100%;"
+                                "row-height"="1.2rem"
+                                "control-styles"="
+                                    tr th { font-size:.9rem; outline:none !important; font-weight:500 !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; -o-text-overflow:ellipsis; }
+                                    tr td { font-size:.8rem; }
+                                    #__table_input { font-size:unset !important; }
+                                ")
+                                {
+                                    "edit-thead"
+                                    {
+                                        "edit-tr"
+                                        {
+                                            "edit-th"(type="Select" field="suscripcion" keyfield="idsuscripcion" options="#<to.json(suscripcions)>" "minwidth"="10rem"){$"Suscripción"}
+                                            "edit-th"(type="Number" field="precio" "default"="0" textalign="end" format="true" thousandssep="true" decs="2" prefix="$ "){$"Precio"}
+                                        }
+                                    }
                                 }
                             }
                         }

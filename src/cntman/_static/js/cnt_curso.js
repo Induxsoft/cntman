@@ -14,6 +14,13 @@ var cursoscap = {
         this.stack = document.getElementById(this.stackid);
         this.table = document.getElementById(this.tableid);
         this.ff = this.form.elements;
+        //cobros accesos
+        this.cobro_acceso=document.getElementById("cobro_acceso");
+        this.btn_table_add_row=document.getElementById("btn_table_add_row");
+        this.btn_table_del_row=document.getElementById("btn_table_del_row");
+        this.tbl_precios=document.getElementById("tbl_precios");
+        this.container_table_precio=document.getElementById("container_table_precio");
+        this.precio_user=document.getElementById("precio_user");
 
         const btn_submit = document.getElementById("btn-submit");
         const btn_upl_mini = document.getElementById("btn-upl-mini");
@@ -91,11 +98,47 @@ var cursoscap = {
             // e.target.setAttribute('aria-hidden', 'true');
             // e.target.setAttribute('inert', '');
         });
-
+        if(this.btn_table_add_row)this.btn_table_add_row.addEventListener("click",()=>
+        {
+            if(this.tbl_precios)this.tbl_precios.AddRow();
+        });
+        if(this.btn_table_del_row)this.btn_table_del_row.addEventListener("click",()=>
+        {
+            if(this.tbl_precios)
+            {
+                let index=this.tbl_precios.CurrentRowIndex();
+                if(index<0)
+                {
+                    alert("Debe seleccionar un elemento de la tabla.");
+                    return;
+                }
+                this.tbl_precios.DeleteCurrentRow();
+            }
+        });
+        if(this.cobro_acceso)
+        {
+            this.cobro_acceso.addEventListener("change",()=>{this.DisableTable();});
+            tools.trigger(this.cobro_acceso,"change");
+        }
         this.setKeyboardShortcuts();
         this.setTableEvents();
     },
+    DisableTable()
+    {
+        if(!this.container_table_precio)return;
 
+        if(!this.cobro_acceso.checked)
+        {
+            this.container_table_precio.classList.add("disabled-all");
+            this.tbl_precios.DataArray=[];
+            this.tbl_precios._printRows();
+            this.precio_user.value=0;
+        }
+        else
+        {
+            this.container_table_precio.classList.remove("disabled-all");
+        }
+    },
     setKeyboardShortcuts()
     {
         document.addEventListener("keydown", (e) => {
@@ -353,8 +396,14 @@ var cursoscap = {
 
             checked_tags.forEach((chk) => { etiquetas.push(chk.value) });
             tags.value = JSON.stringify(etiquetas);
+            
+            var detalle=
+            {
+                detalle:this.tbl_precios.DataArray.filter(r=> Number(r?.idsuscripcion??0) > 0), //detalle cnt_precio_curso
+                _detalle:this.tableData()
+            };
 
-            InduxsoftCrudlModel.Submit(this.form, {_detalle:this.tableData()});
+            InduxsoftCrudlModel.Submit(this.form, detalle);
         }
         catch (error) { console.error(error) }
         finally { this.requesting = false; }
